@@ -1,0 +1,48 @@
+{
+  "name": "vibeflow",
+  "version": "0.1.0",
+  "description": "多模型 AI 研发工作流系统：把 Codex / Claude / Gemini 等多个 AI 编程工具组织成一个可控、可评审、可验收的研发团队",
+  "type": "module",
+  "bin": {
+    "vibeflow": "dist/cli/index.js"
+  },
+  "main": "dist/cli/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli/index.ts",
+    "start": "node dist/cli/index.js",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "ai",
+    "coding",
+    "workflow",
+    "multi-model",
+    "claude",
+    "codex",
+    "gemini",
+    "vibe-coding"
+  ],
+  "author": "chenzhiguo",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "chalk": "^5.3.0",
+    "yaml": "^2.6.0",
+    "fs-extra": "^11.2.0",
+    "ora": "^8.1.0",
+    "prompts": "^2.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/fs-extra": "^11.0.4",
+    "@types/prompts": "^2.4.9",
+    "typescript": "^5.7.0",
+    "tsx": "^4.19.0"
+  }
+}
