@@ -125,7 +125,8 @@ export abstract class SpawnAdapter implements ModelAdapter {
     };
 
     try {
-      const args = invocation.args.filter((a) => a !== undefined && a !== null && a !== '');
+      // 保留空字符串参数：gemini 需要 `--prompt ""`（空值占位，真正的 prompt 走 stdin）
+      const args = invocation.args.filter((a) => a !== undefined && a !== null);
       const result = await runOnce({
         command: invocation.command,
         args,
