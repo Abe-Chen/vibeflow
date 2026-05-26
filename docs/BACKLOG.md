@@ -44,7 +44,8 @@
 **dogfood 沿途又验证/发现**：
 - ✅ 验证了 #3（requirement 待确认项分级生效）、#4（plan 注入 human_decisions 生效，codex 明确"严格遵守"决策）
 - ⏳ 待修：`plan_review` 阶段同样未注入 human_decisions（#4 兄弟问题；claude 会主动读 04 弥补，但不该依赖模型主动性）
-- ⏳ 待攻克（重点）：**develop 自动落盘短板**——`codex exec`/`claude -p` 在 headless 模式下文件写权限不稳定，patch 常只落在 report 里需手动 apply。这是 vibeflow develop 环节"真正落地"的瓶颈，值得专门研究 sandbox/`--full-auto` 配置或换可靠落盘机制
+- ✅ **develop 自动落盘短板已攻克**（2026-05-26）：根因有二——① adapter 朴素 headless 调用没给写权限；② `CODE_OUTPUT_INSTRUCTION` 主动禁止写文件、要求输出 patch（v0.1 临时设计）。修复：develop/fix 注入 codex `--sandbox workspace-write` / claude `--permission-mode acceptEdits`（实测均能落盘）+ prompt 翻转为"直接改文件"+ 落盘检测过滤排除 vibeflow 自产文件（CLAUDE.md/AGENTS.md/docs/）。e2e 实测：codex 经 vibeflow develop 真创建文件、落盘检测精确识别。
+  - ⏳ 遗留：gemini headless 落盘受限（`-p` 需带值 + folder-trust 把 yolo 降级回 default），非 develop 主力，单独待解；且 gemini adapter 现用 `-p` 无值+stdin 本身是 bug（gemini 报"Not enough arguments following: p"，任何阶段都跑不通——只是没人用 gemini 跑过阶段）。
 - ⏳ 待补：引入测试框架 + 为 `assertDeliverable` 门禁补最小单测（项目目前无测试框架）
 
 ## V1 之后 / V2

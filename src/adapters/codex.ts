@@ -17,10 +17,13 @@ export class CodexAdapter extends SpawnAdapter {
     });
   }
 
-  protected buildInvocation(_request: AgentRunRequest): SpawnInvocation {
+  protected buildInvocation(request: AgentRunRequest): SpawnInvocation {
     const command = this.definition.command ?? 'codex';
     const args: string[] = [];
     if (this.definition.subcommand) args.push(this.definition.subcommand);
+
+    // develop/fix 阶段需落盘：codex exec 默认 read-only 沙箱，切到 workspace-write 才能写工作区
+    if (request.writeAccess) args.push('--sandbox', 'workspace-write');
 
     if (this.definition.extra_args?.length) {
       args.push(...this.definition.extra_args);

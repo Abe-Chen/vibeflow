@@ -148,8 +148,12 @@ async function checkCodeChangeApplied(
         .filter(Boolean)
         .filter((l) => {
           const filePart = l.slice(3).trim();
+          // 排除 vibeflow 自己生成的文件，避免误判为"代码已落盘"
           return !filePart.startsWith('.ai-dev/')
-            && !filePart.startsWith('docs/ai-workflow/');
+            && !filePart.startsWith('docs/ai-workflow/')
+            && filePart !== 'CLAUDE.md'
+            && filePart !== 'AGENTS.md'
+            && filePart !== 'docs/';
         });
       if (lines.length === 0) {
         return {
@@ -365,6 +369,8 @@ export async function runStage(opts: RunStageOptions): Promise<StageRunOutcome> 
     outputPath,
     invokeMode: opts.invokeMode ?? 'spawn',
     timeoutMs: stageTimeoutMs,
+    // develop/fix 阶段允许 AI 直接写文件落盘；其他阶段只读（更安全）
+    writeAccess: opts.stageId === 'develop' || opts.stageId === 'fix',
   });
 
   let outputWritten = false;
@@ -379,8 +385,8 @@ export async function runStage(opts: RunStageOptions): Promise<StageRunOutcome> 
         break;
       }
 
-      // v0.1 软门禁：develop / fix 阶段必须 git diff 非空，否则视为"假完成"
-      // （AI 在 stdout 里输出 patch 文本，但没真写到工作树时，常被误判为成功）
+      // 软门禁：develop / fix 阶段必须 git diff 非空，否则视为"假完成"
+      // （已给 AI 授予写权限，但若它仍只输出 patch 文本而没真改文件，会被这里拦下）
       const isCodeStage = opts.stageId === 'develop' || opts.stageId === 'fix';
       if (isCodeStage) {
         const diffCheck = await checkCodeChangeApplied(projectRoot);
@@ -389,10 +395,9 @@ export async function runStage(opts: RunStageOptions): Promise<StageRunOutcome> 
           stage.notes = `产物已生成但代码未落盘：${diffCheck.reason}`;
           log.success(`产物已写入: ${path.relative(projectRoot, outputPath)}`);
           log.warn(`⚠️ 检测到代码未落盘：${diffCheck.reason}`);
-          log.hint('vibeflow v0.1 限制：AI 在沙箱里没有文件写权限，patch 只在报告里。');
-          log.hint(`请手动 apply 报告里的 patch 到对应文件，然后跑：`);
-          log.hint(`  vibeflow advance --feature ${featureName}    # 确认已 apply，推进到下一阶段`);
-          log.hint(`或者保持当前状态，按 vibeflow 流程让 ${opts.stageId === 'develop' ? 'code-review' : 'test'} 阶段评审 patch 文本，最后再统一 apply`);
+          log.hint('本阶段已给模型授予写权限，但未检测到代码改动——可能模型仍只输出了 patch、或改动落在被忽略的目录。');
+          log.hint(`建议：重跑 vibeflow ${opts.stageId} 让模型直接改文件；或手动 apply 报告里的改动后再：`);
+          log.hint(`  vibeflow advance --feature ${featureName}    # 确认已落盘，推进到下一阶段`);
           if (result.stdoutText) {
             log.hint('stdout 摘要:');
             for (const line of summarizeStdout(result.stdoutText).split('\n')) console.log('    ' + chalk.gray(line));

@@ -17,9 +17,12 @@ export class ClaudeAdapter extends SpawnAdapter {
     });
   }
 
-  protected buildInvocation(_request: AgentRunRequest): SpawnInvocation {
+  protected buildInvocation(request: AgentRunRequest): SpawnInvocation {
     const command = this.definition.command ?? 'claude';
     const args: string[] = [this.definition.headless_flag ?? '-p'];
+
+    // develop/fix 阶段需落盘：默认 permission-mode 在 headless 下不写文件，acceptEdits 自动批准编辑
+    if (request.writeAccess) args.push('--permission-mode', 'acceptEdits');
 
     if (this.definition.output_format === 'json') {
       args.push('--output-format', 'json');

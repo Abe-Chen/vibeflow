@@ -19,30 +19,26 @@ vibeflow 会接收你的 stdout 回复，自动写入 {{output_path}}。`;
 
 /**
  * 代码修改型阶段（develop / fix）的输出方式说明。
- * v0.1 限制：模型无文件写权限，请把代码修改作为 patch 文本放进报告里，用户手动 apply。
+ * vibeflow 已在这两个阶段给模型授予文件写权限，要求模型直接修改/创建代码文件落盘，再输出报告。
  */
 const CODE_OUTPUT_INSTRUCTION = `## 输出方式（重要）
 
-⚠️ vibeflow v0.1 当前不给开发阶段模型授予文件写权限。请按以下方式输出：
+✅ vibeflow 在 develop / fix 阶段**已给你授予文件写权限**（codex \`--sandbox workspace-write\` / claude \`--permission-mode acceptEdits\`）。请：
 
-**请把整份内容作为你的回复（stdout）直接输出**，包含两部分：
-
-1. **报告主体**（修改文件清单、原因、风险等结构化文档）
-2. **代码修改的 patch 文本**（unified diff 格式，或者按文件列出"完整新内容"）
+1. **直接修改 / 创建项目里的真实代码文件**（用文件操作落盘到工作目录），**不要只输出 patch 文本让用户手动 apply**。
+2. 改完文件后，把**实现 / 修复报告**作为你的回复（stdout）输出，说明改了哪些文件、为什么、有何风险。
 
 约束：
 
-- ❌ 不要调用 Write / Edit / MultiEdit 等文件工具（即使调用了也无效）
+- ✅ **真正落盘**：在工作目录创建 / 修改真实代码文件——这是本阶段的核心产出，vibeflow 会用 \`git diff\` 校验，未落盘会判为失败
+- ❌ 不要只输出 patch / diff 文本而不真改文件
 - ❌ 不要描述"等待授权"或"请允许写入"
-- ❌ **不要输出思考过程或前言**（如 "Let me analyze..."、"I'll now output..."、"分析完毕，下面是报告："等）
-- ❌ 不要在报告前用任何语言（中文/英文）解释你做了什么调查
-- ✅ **第一行直接就是报告的 # 标题**，前面不能有任何字符
-- ✅ 直接输出 markdown 报告 + 代码 patch
-- ✅ 用户会根据你的输出手动 apply 代码修改
+- ❌ **不要输出思考过程或前言**（如 "Let me analyze..."、"分析完毕，下面是报告："等）
+- ❌ 不要在报告前用任何语言解释你做了什么调查
+- ✅ 报告**第一行直接就是 # 标题**，前面不能有任何字符
+- ✅ 报告里列修改文件清单 + 原因；可附关键片段，但不必整文件粘贴（git 已能看到改动）
 
-vibeflow 会接收你的 stdout，自动写入 {{output_path}}。
-
-（注：未来 vibeflow 会在开发阶段自动授予 \`--permission-mode acceptEdits\`，届时模型可直接修改代码。）`;
+vibeflow 会接收你的 stdout（报告）写入 {{output_path}}，并用 \`git diff\` 校验代码是否真的落盘。`;
 
 export const REQUIREMENT_PROMPT = `# Requirement 阶段 Prompt 模板
 
@@ -191,8 +187,8 @@ export const DEVELOP_PROMPT = `# Develop 阶段 Prompt 模板
 - 项目规则：{{project_rules}}
 
 ## 任务
-1. 严格按 final_plan 设计代码修改（v0.1 限制：暂不实际写入文件，见下方"输出方式"）。
-2. 把实现报告 + 代码修改（diff 或完整文件内容）一起作为回复输出。
+1. 严格按 final_plan **直接修改 / 创建项目代码文件**（真正落盘到工作目录，不要只输出 patch）。
+2. 改完后输出实现报告（见下），说明改了哪些文件、完成与未完成项。
 
 ## 实现报告必须包含
 - 修改文件清单（路径 + 修改原因）
@@ -319,11 +315,11 @@ export const FIX_PROMPT = `# Fix 阶段 Prompt 模板
 - 项目规则：{{project_rules}}
 
 ## 任务
-1. 设计代码修复（v0.1 限制：暂不实际写入文件，见下方"输出方式"）：
+1. **直接修改项目代码文件**完成修复（真正落盘到工作目录，不要只输出 patch）：
    - 修复评审中所有 Blocker
    - 修复用户已确认的 Major（参考 04_human_decisions.md）
    - 不要处理 Minor / Optional（除非用户明确指示）
-2. 把修复报告 + 代码修复（diff 或完整文件内容）一起作为回复输出。
+2. 改完后输出修复报告（见下），说明修了哪些、未修哪些及原因。
 
 ## 修复报告必须包含
 - 修复项清单（每条对应评审条目的引用）

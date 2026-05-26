@@ -40,6 +40,8 @@ export interface AgentRunRequest {
   invokeMode?: InvokeMode;
   /** 单次调用超时，默认 5 分钟 */
   timeoutMs?: number;
+  /** 是否允许 AI 直接写文件落盘（develop/fix 阶段=true，会给 CLI 注入写权限/沙箱参数；默认只读） */
+  writeAccess?: boolean;
   /** 透传额外环境变量（不会覆盖已有 env） */
   env?: Record<string, string>;
 }
