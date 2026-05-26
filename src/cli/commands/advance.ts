@@ -49,6 +49,11 @@ export async function runAdvance(opts: AdvanceOptions = {}): Promise<void> {
     }
     if (outcome.finished) {
       log.success(chalk.bold('全部阶段已完成 🎉  状态: done'));
+    } else if (outcome.completedStage?.id === 'finalize') {
+      // 方案锁定后给"继续开发 / 交付收尾"两条路（只判 finalize，兼容自定义工作流）
+      log.success('方案已锁定。两条路任选：');
+      log.hint(`→ 继续开发   ${chalk.cyan('vibeflow develop')}`);
+      log.hint(`→ 交付收尾   ${chalk.cyan('vibeflow deliver')}   （只要这份方案；之后仍可随时 develop）`);
     } else if (outcome.nextStage) {
       log.step(`下一阶段: ${chalk.cyan(outcome.nextStage.id)} (role: ${outcome.nextStage.role})`);
       log.hint(`运行: vibeflow ${outcome.nextStage.id.replace(/_/g, '-')}`);

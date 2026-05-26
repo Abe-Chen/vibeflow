@@ -30,6 +30,23 @@
 
 > ✅ **v0.1 polish 全部完成**（P0 四件 + P1 三件 + P2 一件）。
 
+## 方案交付模式 deliver（2026-05-26，用 vibeflow 自己 dogfood 实现）
+
+**已完成**（requirement→plan→plan-review→finalize→develop 全程走 vibeflow 自己，develop 由人按锁定方案手动落地）：
+- 新增软终态 `RunStatus = 'delivered'` + `run.json.meta.delivered_at`（`src/core/run.ts`）
+- 新增 `src/core/deliver.ts`（getDeliverability/assertDeliverable/markDelivered）+ `src/cli/commands/deliver.ts` + 注册
+- 门禁：finalize 已锁定 + develop 及之后全 pending；幂等；拒绝文案区分"未锁定"/"已进开发"
+- `stage-runner.pickFeature` 加 `stageId`（仅 develop 放行 delivered）；develop 续接时 `delivered → in_progress` 且保留 delivered_at
+- `advance` finalize 后提示"继续开发 / 交付收尾"两条路；`status` 显示 `📦 方案已交付（可继续开发）`
+- 文档同步：README / USAGE §6.6 / TECH_DESIGN
+- 验收：核心 7 条实测通过（未锁定拒绝/成功/delivered_at/已开发拒绝/幂等/📦/续接保留）
+
+**dogfood 沿途又验证/发现**：
+- ✅ 验证了 #3（requirement 待确认项分级生效）、#4（plan 注入 human_decisions 生效，codex 明确"严格遵守"决策）
+- ⏳ 待修：`plan_review` 阶段同样未注入 human_decisions（#4 兄弟问题；claude 会主动读 04 弥补，但不该依赖模型主动性）
+- ⏳ 待攻克（重点）：**develop 自动落盘短板**——`codex exec`/`claude -p` 在 headless 模式下文件写权限不稳定，patch 常只落在 report 里需手动 apply。这是 vibeflow develop 环节"真正落地"的瓶颈，值得专门研究 sandbox/`--full-auto` 配置或换可靠落盘机制
+- ⏳ 待补：引入测试框架 + 为 `assertDeliverable` 门禁补最小单测（项目目前无测试框架）
+
 ## V1 之后 / V2
 
 - `lock-plan` 严格化：hash + `.locked` 标记（当前是软门禁——只校验「非占位 + finalize 已 advance」）

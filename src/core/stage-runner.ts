@@ -44,7 +44,7 @@ export interface StageRunOutcome {
   outputWritten: boolean;
 }
 
-export async function pickFeature(projectRoot: string, explicit?: string): Promise<string> {
+export async function pickFeature(projectRoot: string, explicit?: string, stageId?: string): Promise<string> {
   if (explicit) return explicit;
   const features = await listFeatures(projectRoot);
   if (features.length === 0) {
@@ -54,7 +54,10 @@ export async function pickFeature(projectRoot: string, explicit?: string): Promi
   for (const name of features) {
     const state = await readRunState(projectRoot, name);
     if (!state) continue;
-    if (state.status === 'created' || state.status === 'in_progress' || state.status === 'blocked') {
+    const isActive = state.status === 'created' || state.status === 'in_progress' || state.status === 'blocked';
+    // delivered 是软终态：仅在续接 develop 时才把它视为可选任务（其他阶段不自动选中已交付任务）
+    const isResumableDelivered = stageId === 'develop' && state.status === 'delivered';
+    if (isActive || isResumableDelivered) {
       activeFeatures.push(name);
     }
   }
@@ -264,7 +267,7 @@ export async function runStage(opts: RunStageOptions): Promise<StageRunOutcome> 
   }
 
   const config = await loadConfig(projectRoot);
-  const featureName = await pickFeature(projectRoot, opts.feature);
+  const featureName = await pickFeature(projectRoot, opts.feature, opts.stageId);
   const state = await readRunState(projectRoot, featureName);
   if (!state) throw new Error(`找不到 run.json: ${featureName}`);
 
@@ -346,7 +349,8 @@ export async function runStage(opts: RunStageOptions): Promise<StageRunOutcome> 
   stage.status = 'in_progress';
   stage.model = modelId;
   stage.started_at = new Date().toISOString();
-  if (state.status === 'created') state.status = 'in_progress';
+  // created 或 delivered（续接开发）→ in_progress；delivered 时保留 meta.delivered_at 不删
+  if (state.status === 'created' || state.status === 'delivered') state.status = 'in_progress';
   state.current_stage = opts.stageId;
   await writeRunState(projectRoot, featureName, state);
 

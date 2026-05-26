@@ -5,6 +5,9 @@ import { getVibeflowDir, getFeatureDir } from '../utils/paths.js';
 
 export type StageStatus = 'pending' | 'in_progress' | 'completed' | 'blocked' | 'failed' | 'skipped';
 
+/** 任务级状态。`delivered` 是"方案已交付（可继续开发）"的软终态，与 done 并列、但可逆。 */
+export type RunStatus = 'created' | 'in_progress' | 'blocked' | 'done' | 'cancelled' | 'delivered';
+
 export interface StageState {
   id: string;
   role: string;
@@ -23,7 +26,7 @@ export interface RunState {
   run_id: string;
   feature_name: string;
   workflow: string;
-  status: 'created' | 'in_progress' | 'blocked' | 'done' | 'cancelled';
+  status: RunStatus;
   current_stage: string | null;
   created_at: string;
   updated_at: string;
@@ -31,6 +34,8 @@ export interface RunState {
   meta: {
     description?: string;
     created_by?: string;
+    /** 方案交付时间（ISO）；vibeflow deliver 写入，续接 develop 时保留 */
+    delivered_at?: string;
   };
 }
 

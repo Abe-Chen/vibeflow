@@ -21,6 +21,14 @@ function badge(status: string): string {
   return STATUS_BADGE[status] ?? status;
 }
 
+// 任务级状态的友好展示（delivered 软终态需体现"可继续开发"）
+const RUN_STATUS_LABEL: Record<string, string> = {
+  delivered: '📦 方案已交付（可继续开发）',
+};
+function runStatusLabel(status: string): string {
+  return RUN_STATUS_LABEL[status] ?? status;
+}
+
 export async function runStatus(opts: StatusOptions = {}): Promise<void> {
   const projectRoot = resolveProjectRoot();
 
@@ -55,7 +63,7 @@ export async function runStatus(opts: StatusOptions = {}): Promise<void> {
 
     log.title(`${chalk.bold(feature)}  ${chalk.gray(`[${state.workflow}]`)}`);
     log.hint(`run_id: ${state.run_id}`);
-    log.hint(`状态: ${state.status}    当前阶段: ${state.current_stage ?? '-'}`);
+    log.hint(`状态: ${runStatusLabel(state.status)}    当前阶段: ${state.current_stage ?? '-'}`);
     if (state.meta.description) log.hint(`描述: ${state.meta.description}`);
 
     for (const stage of state.stages) {

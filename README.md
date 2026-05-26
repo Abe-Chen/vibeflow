@@ -48,8 +48,9 @@ vibeflow new "feature-name" -d "一句话描述"
 vibeflow requirement -m "<需求描述>"
 vibeflow advance              # human_gate 确认需求
 vibeflow plan -y              # -y 自动 chain：plan → plan-review → finalize，遇 human_gate 停
-vibeflow advance              # human_gate 锁定方案
-vibeflow develop -y           # -y 自动 chain：develop → code-review → fix → test → archive
+vibeflow advance              # human_gate 锁定方案 —— 此后二选一：
+vibeflow deliver              #   ① 只要方案就收尾（状态=📦方案已交付，之后仍可继续 develop）
+vibeflow develop -y           #   ② 继续开发：-y 自动 chain develop → code-review → fix → test → archive
 vibeflow advance              # 收尾，状态变 done
 ```
 
@@ -64,6 +65,7 @@ vibeflow advance              # 收尾，状态变 done
 | `requirement` → `plan` → `plan-review` → `finalize` | 需求与方案阶段 |
 | `develop` → `code-review` → `fix` → `test` → `archive` | 开发与交付阶段 |
 | `advance` | 标当前阶段完成并推进（用于 human_gate） |
+| `deliver` | 方案锁定后交付收尾，标记"方案已交付（可继续开发）"，之后仍可随时 `develop` |
 | `handoff` | 生成交接文档（横切，不动 run.json） |
 
 阶段命令通用选项：`-f, --feature` / `--model` / `--export` / `-y, --yes`（自动 chain）/ `--no-chain`（单步）。
@@ -109,6 +111,7 @@ vibeflow/
 - ✅ **requirement 多种输入**：`-m` 直接传 / `--from-file` 读文件 / `--edit` 开编辑器 / 自动检测已有 `00_requirement.md`
 - ✅ **doctor 全面体检**：模型 CLI 可用性 + 角色映射 + 项目命令配置（test/build/lint）+ 工具链就绪 + git 仓库状态
 - ✅ **v0.1 polish 全部完成**：P0 四件 + P1 三件 + P2 一件，见 [`docs/BACKLOG.md`](docs/BACKLOG.md)
+- ✅ **方案交付模式 `deliver`**：finalize 锁定后可"只要方案"正式收尾（📦 方案已交付、可继续开发），用 vibeflow 自己 dogfood 全流程实现
 - ⏳ V2 规划：探索池模式（parallel_plan + accept-plan + consult + synthesize），详见 PRD §7.2 / §15.3
 
 ## License

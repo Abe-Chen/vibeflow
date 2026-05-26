@@ -13,3 +13,5 @@ coverage/
 # vibeflow 运行时产物（由 init/各阶段生成，源在 src/templates/）
 .ai-dev/
 docs/ai-workflow/
+/CLAUDE.md
+/AGENTS.md

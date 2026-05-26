@@ -266,6 +266,8 @@ PLAN_REVISING
 FINAL_PLAN_PENDING_CONFIRMATION
   ↓
 FINAL_PLAN_LOCKED
+  ↓  （二选一）
+  ├─→ DELIVERED  （vibeflow deliver：只交付方案收尾；软终态、可逆，随时回到 DEVELOPING）
   ↓
 DEVELOPING
   ↓
@@ -1943,10 +1945,11 @@ Local-first + CLI-first + Markdown Artifact + YAML Workflow + SQLite State + Mod
 | `status` | `cli/commands/status.ts` | ✅ |
 | `requirement` | `cli/commands/requirement.ts` | ✅ |
 | `plan` / `plan-review` / `finalize` / `develop` / `code-review` / `fix` / `test` / `archive` | `cli/commands/stages.ts`（统一工厂） | ✅ |
-| `advance [--skip]` | `cli/commands/advance.ts` | ✅ |
+| `advance [--skip]` | `cli/commands/advance.ts` | ✅ finalize 后提示"继续开发 / 交付收尾"两条路 |
+| `deliver [-f]` | `cli/commands/deliver.ts` + `core/deliver.ts` | ✅ 方案锁定后交付收尾，软终态 `delivered`（可逆续接 develop） |
 | `handoff` | `cli/commands/handoff.ts` | ✅ |
 
-总计 19 个面向用户的命令（含 6 个 profile 子命令）。
+总计 20 个面向用户的命令（含 6 个 profile 子命令）。新增 `RunStatus` 软终态 `delivered` + `run.json.meta.delivered_at`。
 
 ---
 

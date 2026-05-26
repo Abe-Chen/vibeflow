@@ -541,6 +541,23 @@ commands:
 - 留空数组时，`vibeflow doctor` 的「项目命令配置」段会标 *未配置*，`test` 阶段开跑前也会告警（缺测试命令时无法实际跑测试）。
 - `vibeflow doctor` 的「工具链就绪检测」会进一步检查这些命令引用的程序（`npm`/`flutter`/`./gradlew`…）是否真的装了或文件是否存在。
 
+### 6.6 方案交付模式（deliver）
+
+有时你只想要一份经过多模型评审、锁定的方案，本轮不打算继续编码（交给团队/他人/自己实现）。`finalize` 锁定方案后，`advance` 会提示两条路：
+
+```
+✓ 方案已锁定。两条路任选：
+  → 继续开发   vibeflow develop
+  → 交付收尾   vibeflow deliver   （只要这份方案；之后仍可随时 develop）
+```
+
+`vibeflow deliver` 把任务标记为 **`delivered`（📦 方案已交付，可继续开发）**——一个正当的完成态，`status` 不再显示成"未完成的 in_progress"。
+
+- **门禁**：只有 `finalize` 已完成、`03_final_plan.md` 已锁定、且 develop 及之后阶段都还没开始时才能交付；未锁定或已进开发会被拒绝并给出区分提示。
+- **交付物**：就是已锁定的 `03_final_plan.md`，不另外生成文档。
+- **可逆续接**：已交付的任务随时 `vibeflow develop` 即可继续，状态自动回到 `in_progress`，`meta.delivered_at` 保留。
+- **幂等**：重复 `deliver` 不刷新交付时间，提示已是交付状态。
+
 ---
 
 ## 7. 模型调用的两种模式
@@ -657,6 +674,7 @@ vibeflow develop --model claude
 | `vibeflow plan-review` | 评审方案 |
 | `vibeflow finalize` | 出最终方案（human_gate） |
 | `vibeflow advance [--skip]` | 标当前阶段完成 + 推进 |
+| `vibeflow deliver [-f feature]` | 方案锁定后交付收尾，标记"📦 方案已交付（可继续开发）"，之后仍可 develop |
 | `vibeflow develop` | 按方案开发 |
 | `vibeflow code-review` | 代码评审 |
 | `vibeflow fix` | 修复 Blocker / Major |
