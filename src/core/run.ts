@@ -37,6 +37,13 @@ export interface RunState {
     /** 方案交付时间（ISO）；vibeflow deliver 写入，续接 develop 时保留 */
     delivered_at?: string;
   };
+  /** 变更请求记录：feature 完成/交付后又发现问题时，vibeflow change-request 写入 */
+  change_requests?: Array<{
+    id: string;
+    reason: string;
+    created_at: string;
+    resolved_at?: string;
+  }>;
 }
 
 export interface WorkflowTemplate {

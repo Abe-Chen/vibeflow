@@ -100,10 +100,8 @@
 
 - ✅ **超时即判 failed，丢失已落盘成果**（2026-05-27 已修）：cultural 首次 develop 跑满 30min 超时被 kill，但 codex 已落盘 ~500 行 → 判 failed 要人工救回。
   - 已改：`stage-runner.ts` case 'timeout' 对 develop/fix 先跑 `checkCodeChangeApplied`——有落盘→标 `blocked`（保留成果，提示 git diff review / advance / 重跑）；无落盘→仍 `failed`（提示调 stage_timeouts 或拆小任务）。两向均测过（有落盘→blocked、无落盘→failed）。
-- **develop 产出无编译/类型验证，codex 会臆测 SDK API**：codex 在 spawn 沙箱里编译不了目标项目，对不确定的 API 直接猜——cultural 里 `createSignedURLs` 返回类型猜错、用了不存在的 `URL.percentEncodedPath` → 直接编译失败。code-review(claude) 抓到了一部分，但根因是 develop 无任何编译反馈。
-  - 改法（探索）：develop 后若 config.commands.build 非空，自动跑一次 build 把编译错误回灌；或在 prompt 里强约束"不确定的三方 API 必须基于项目已 import 的版本核实，不可臆测签名"。
-- **change_request 流程缺失**：cultural archive 后真机又测出一串 bug，全靠人工手改。vibeflow 设计文档提过 change_request 但无实现——"已锁定/已归档 feature 又要改"没有正规支线。
-  - 改法：`vibeflow change-request -m` 在锁定后重开轻量评审→改→验证支线（PRD 已有设计）。
+- ✅ **develop 产出无编译验证→codex 臆测 SDK API**（2026-05-27 已修，commit 7e903ee）：develop/fix 落盘后自动跑 `config.commands.build`，失败→blocked+回灌错误尾部、成功→completed（未配则跳过）；DEVELOP/FIX prompt 加"不要臆测三方 API、按锁定版本真实签名写"约束。两向验证通过。
+- ✅ **change_request 流程缺失**（2026-05-27 已修）：`vibeflow change-request -m "<原因>"` 对 done/delivered 任务发起变更——记录到 `run.json.change_requests[]` + `change_requests.md`，重开到 develop（develop/fix 阶段注入 change_requests_file），引导走轻量修订。进行中任务拒绝。验证通过。
 
 ### P1 — 上下文与协作
 

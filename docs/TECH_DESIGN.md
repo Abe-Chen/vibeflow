@@ -1947,9 +1947,10 @@ Local-first + CLI-first + Markdown Artifact + YAML Workflow + SQLite State + Mod
 | `plan` / `plan-review` / `finalize` / `develop` / `code-review` / `fix` / `test` / `archive` | `cli/commands/stages.ts`（统一工厂） | ✅ |
 | `advance [--skip]` | `cli/commands/advance.ts` | ✅ finalize 后提示"继续开发 / 交付收尾"两条路 |
 | `deliver [-f]` | `cli/commands/deliver.ts` + `core/deliver.ts` | ✅ 方案锁定后交付收尾，软终态 `delivered`（可逆续接 develop） |
+| `change-request [-f] -m` | `cli/commands/change-request.ts` + `core/change-request.ts` | ✅ 对 done/delivered 任务发起变更，重开到 develop，记 `run.json.change_requests[]` + `change_requests.md` |
 | `handoff` | `cli/commands/handoff.ts` | ✅ |
 
-总计 20 个面向用户的命令（含 6 个 profile 子命令）。新增 `RunStatus` 软终态 `delivered` + `run.json.meta.delivered_at`。
+总计 21 个面向用户的命令（含 6 个 profile 子命令）。新增 `RunStatus` 软终态 `delivered`、`run.json.meta.delivered_at`、`run.json.change_requests[]`。develop/fix 落盘后自动跑 commands.build 校验编译。
 
 ---
 

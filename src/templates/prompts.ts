@@ -185,12 +185,15 @@ export const DEVELOP_PROMPT = `# Develop 阶段 Prompt 模板
 ## 输入
 - 最终方案：{{final_plan_file}}（已锁定，不得超出范围）
 - 人工决策：{{human_decisions_file}}
+- 变更请求（如有）：{{change_requests_file}}
 - 项目代码：当前工作目录
 - 项目规则：{{project_rules}}
 
 ## 任务
 1. 严格按 final_plan **直接修改 / 创建项目代码文件**（真正落盘到工作目录，不要只输出 patch）。
 2. 改完后输出实现报告（见下），说明改了哪些文件、完成与未完成项。
+
+> 若存在「变更请求」：说明本任务已收尾后又发现问题，本轮**只按变更请求修正**，在 final_plan 范围内改，不要重做整个 feature。
 
 ## 实现报告必须包含
 - 修改文件清单（路径 + 修改原因）
@@ -315,6 +318,7 @@ export const FIX_PROMPT = `# Fix 阶段 Prompt 模板
 ## 输入
 - 最终方案：{{final_plan_file}}（不得超出范围）
 - 代码评审：{{code_review_file}}
+- 变更请求（如有）：{{change_requests_file}}
 - 项目规则：{{project_rules}}
 
 ## 任务

@@ -8,6 +8,7 @@ import { registerDoctorCommand } from './commands/doctor.js';
 import { registerRequirementCommand } from './commands/requirement.js';
 import { registerAdvanceCommand } from './commands/advance.js';
 import { registerDeliverCommand } from './commands/deliver.js';
+import { registerChangeRequestCommand } from './commands/change-request.js';
 import { registerStageCommands } from './commands/stages.js';
 import { registerHandoffCommand } from './commands/handoff.js';
 import { registerLearnCommand } from './commands/learn.js';
@@ -31,6 +32,7 @@ registerRequirementCommand(program);
 registerStageCommands(program);
 registerAdvanceCommand(program);
 registerDeliverCommand(program);
+registerChangeRequestCommand(program);
 registerHandoffCommand(program);
 
 program.on('command:*', (operands) => {

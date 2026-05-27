@@ -66,6 +66,7 @@ vibeflow advance              # 收尾，状态变 done
 | `develop` → `code-review` → `fix` → `test` → `archive` | 开发与交付阶段 |
 | `advance` | 标当前阶段完成并推进（用于 human_gate） |
 | `deliver` | 方案锁定后交付收尾，标记"方案已交付（可继续开发）"，之后仍可随时 `develop` |
+| `change-request` | 对已收尾（done/delivered）任务发起变更：记录原因并重开到开发阶段，走轻量修订 |
 | `handoff` | 生成交接文档（横切，不动 run.json） |
 
 阶段命令通用选项：`-f, --feature` / `--model` / `--export` / `-y, --yes`（自动 chain）/ `--no-chain`（单步）。

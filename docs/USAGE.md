@@ -675,6 +675,7 @@ vibeflow develop --model claude
 | `vibeflow finalize` | 出最终方案（human_gate） |
 | `vibeflow advance [--skip]` | 标当前阶段完成 + 推进 |
 | `vibeflow deliver [-f feature]` | 方案锁定后交付收尾，标记"📦 方案已交付（可继续开发）"，之后仍可 develop |
+| `vibeflow change-request -m "<原因>" [-f feature]` | 对已收尾任务发起变更，重开到开发阶段走轻量修订 |
 | `vibeflow develop` | 按方案开发 |
 | `vibeflow code-review` | 代码评审 |
 | `vibeflow fix` | 修复 Blocker / Major |

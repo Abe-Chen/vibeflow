@@ -33,9 +33,9 @@ const STAGE_CONTEXT_KEYS: Record<string, string[]> = {
   plan: ['requirement_file', 'human_decisions_file', 'project_rules', 'related_paths', 'output_path'],
   plan_review: ['requirement_file', 'plan_file', 'human_decisions_file', 'project_rules', 'output_path'],
   finalize: ['requirement_file', 'plan_file', 'review_file', 'human_decisions_file', 'output_path'],
-  develop: ['final_plan_file', 'human_decisions_file', 'project_rules', 'output_path'],
+  develop: ['final_plan_file', 'human_decisions_file', 'change_requests_file', 'project_rules', 'output_path'],
   code_review: ['final_plan_file', 'implementation_report_file', 'diff_summary', 'project_rules', 'output_path'],
-  fix: ['final_plan_file', 'code_review_file', 'project_rules', 'output_path'],
+  fix: ['final_plan_file', 'code_review_file', 'change_requests_file', 'project_rules', 'output_path'],
   test: ['final_plan_file', 'implementation_report_file', 'fix_report_file', 'test_commands', 'output_path'],
   archive: ['final_plan_file', 'implementation_report_file', 'test_report_file', 'output_path'],
   handoff: ['final_plan_file', 'implementation_report_file', 'output_path'],
@@ -151,6 +151,7 @@ async function buildAutoVariables(opts: BuildContextOptions): Promise<Record<str
     ['code_review_file', '06_code_review.md'],
     ['fix_report_file', '07_fix_report.md'],
     ['test_report_file', '08_test_report.md'],
+    ['change_requests_file', 'change_requests.md'],
   ];
   for (const [key, fileName] of fileVars) {
     const abs = path.join(featureDir, fileName);
