@@ -92,6 +92,34 @@
 - **plan-review（claude，跨模型）= 决定性证据**：真读代码（精确行号），抓出 codex 没看到的真 bug——B2（新列 NOT NULL 破坏现有"故宫10件"insert）、M3（文件清单说不改 doubao.ts 但 P1 公共复用必须改→方案自相矛盾）、M4（审核通过只 ALTER objects 没写 object_contents→识别命中介绍为空）；且客观（指出 codex 过度声称改动面、也肯定其做对处）。
 - 跑到 plan-review 止（用户选），未跑 finalize（需用户回答一批真实产品决策）。
 
+## 🔧 cultural 全流程实战暴露的改进点（2026-05-27，按优先级）
+
+> 来源：用 vibeflow 完整做完 cultural 两个 feature（含 develop 真落盘 + 大量真机测试）后的系统复盘。均为真实发生的问题，非臆测。
+
+### P0 — develop 阶段可靠性（这次踩得最多）
+
+- **超时即判 failed，丢失已落盘成果**：cultural 首次 develop 跑满 30min 超时被 kill，但 codex 已落盘 ~500 行 + 没来得及写 implementation_report → 判 failed，要人工补报告+改状态救回。
+  - 改法：timeout（含被 kill）时也跑 `checkCodeChangeApplied`，若已落盘则标为"超时但有产出"（如 blocked 而非 failed）+ 提示用户 review 已落盘代码，不要当彻底失败丢弃。位置 `stage-runner.ts` case 'timeout'。
+- **develop 产出无编译/类型验证，codex 会臆测 SDK API**：codex 在 spawn 沙箱里编译不了目标项目，对不确定的 API 直接猜——cultural 里 `createSignedURLs` 返回类型猜错、用了不存在的 `URL.percentEncodedPath` → 直接编译失败。code-review(claude) 抓到了一部分，但根因是 develop 无任何编译反馈。
+  - 改法（探索）：develop 后若 config.commands.build 非空，自动跑一次 build 把编译错误回灌；或在 prompt 里强约束"不确定的三方 API 必须基于项目已 import 的版本核实，不可臆测签名"。
+- **change_request 流程缺失**：cultural archive 后真机又测出一串 bug，全靠人工手改。vibeflow 设计文档提过 change_request 但无实现——"已锁定/已归档 feature 又要改"没有正规支线。
+  - 改法：`vibeflow change-request -m` 在锁定后重开轻量评审→改→验证支线（PRD 已有设计）。
+
+### P1 — 上下文与协作
+
+- **plan_review 未注入 human_decisions**（#4 兄弟问题）：claude 会主动读 04 弥补，但不该依赖模型主动性。改 `context.ts` 的 plan_review fileVars。
+- **多 feature 工作区耦合无防护**：cultural 两 feature 改动混在工作区、无法独立 diff/commit，code-review 才发现耦合。vibeflow 无"feature 间改动隔离/依赖声明"机制。worktree 隔离（V2 已规划）可缓解。
+
+### P2 — 真实环境衔接
+
+- **test 阶段对"需真机/真实环境"项目无能为力**：cultural 的 test 全靠人肉真机（iOS 需 Xcode、识别需真实拍摄+后端），vibeflow 只能 skip。test 阶段对这类项目应产出"人工验收清单"而非尝试自动跑。
+- **后端部署/迁移衔接**：develop 写了 Edge Function + SQL 迁移，但部署/apply 全靠用户手动（且 Supabase 免费项目会被回收→NXDOMAIN，重启需补 apply 后加迁移）。可在 archive/handoff 产出"部署清单"提醒。
+
+### 已在本轮修复（cultural 期间）
+
+- ✅ 落盘检测过滤 CLAUDE.md/AGENTS.md/docs/（`ba4fbaf`，消除误报）
+- ✅ develop/fix 三家 CLI 真落盘 + prompt 翻转（`ba4fbaf`/`2afd747`）
+
 ## 已知遗留（FlipClockApp 实战项目）
 
 - `./gradlew :app:assembleDebug` 曾跑 57 分钟最终 BUILD FAILED；用户本机 Android Studio 环境也有问题
