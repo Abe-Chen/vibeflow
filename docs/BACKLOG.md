@@ -112,6 +112,9 @@
 
 - **test 阶段对"需真机/真实环境"项目无能为力**：cultural 的 test 全靠人肉真机（iOS 需 Xcode、识别需真实拍摄+后端），vibeflow 只能 skip。test 阶段对这类项目应产出"人工验收清单"而非尝试自动跑。
 - **后端部署/迁移衔接**：develop 写了 Edge Function + SQL 迁移，但部署/apply 全靠用户手动（且 Supabase 免费项目会被回收→NXDOMAIN，重启需补 apply 后加迁移）。可在 archive/handoff 产出"部署清单"提醒。
+- **长期文档生命周期管理（用多了才显现）**：每个 feature 在 `docs/ai-workflow/<feature>/` 留 11 个文件（00–09 产物 + run.json），archive 不移动/不归档——内容不会乱（目录隔离 + 文件名标准化），但跑几十上百个 feature 后会**平铺膨胀**：所有目录堆在一层、`status` 把 done 的也全列出、无活跃/归档区分、找历史只能靠目录名。
+  - 改法（轻→重）：①`status` 默认只显示活跃任务（created/in_progress/blocked），done/delivered 折叠，`--all` 全显示；②`archive` 把 done 的 feature 目录移到 `docs/ai-workflow/_archived/`，活跃区只留进行中；③按年月/模块分目录 + 总索引 `INDEX.md`。
+  - 建议组合：①+②（status 默认看活跃 + archive 自动归档），改动小、解决主要痛点。短期（几个 feature）不影响，无需急做。
 
 ### 已在本轮修复（cultural 期间）
 
