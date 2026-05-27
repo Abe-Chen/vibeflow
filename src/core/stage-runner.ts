@@ -431,9 +431,26 @@ export async function runStage(opts: RunStageOptions): Promise<StageRunOutcome> 
       break;
     }
     case 'timeout': {
+      // P0-1 超时保护：develop/fix 阶段超时被 kill 时，模型可能已落盘部分代码。
+      // 先检测落盘，有产出则标 blocked（保留成果、提示 review），不要当彻底失败丢弃。
+      const isCodeStage = opts.stageId === 'develop' || opts.stageId === 'fix';
+      if (isCodeStage) {
+        const diffCheck = await checkCodeChangeApplied(projectRoot);
+        if (diffCheck.applied) {
+          stage.status = 'blocked';
+          stage.notes = `调用超时，但已检测到代码落盘（${diffCheck.summary}）。超时前模型可能已完成部分/全部改动，请 review 后再决定。`;
+          log.warn(`⚠️ 调用超时（${result.error}），但检测到代码已落盘：${diffCheck.summary}`);
+          log.hint('超时不代表没产出——模型在被中断前可能已改了文件。请：');
+          log.hint(`  1) git diff 查看已落盘的改动是否完整/可用`);
+          log.hint(`  2) 完整可用 → vibeflow advance --feature ${featureName}（推进到下一阶段，让 code-review 把关）`);
+          log.hint(`  3) 不完整 → 手动补全，或重跑 vibeflow ${opts.stageId}（注意会基于当前已落盘状态继续）`);
+          break;
+        }
+      }
       stage.status = 'failed';
       stage.notes = result.error ?? 'timeout';
       log.error(`调用超时: ${result.error}`);
+      log.hint(`未检测到代码落盘。可调高 stage_timeouts.${opts.stageId} 后重跑，或拆小本阶段任务范围。`);
       break;
     }
     case 'failed': {

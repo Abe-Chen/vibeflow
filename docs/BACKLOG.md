@@ -98,8 +98,8 @@
 
 ### P0 — develop 阶段可靠性（这次踩得最多）
 
-- **超时即判 failed，丢失已落盘成果**：cultural 首次 develop 跑满 30min 超时被 kill，但 codex 已落盘 ~500 行 + 没来得及写 implementation_report → 判 failed，要人工补报告+改状态救回。
-  - 改法：timeout（含被 kill）时也跑 `checkCodeChangeApplied`，若已落盘则标为"超时但有产出"（如 blocked 而非 failed）+ 提示用户 review 已落盘代码，不要当彻底失败丢弃。位置 `stage-runner.ts` case 'timeout'。
+- ✅ **超时即判 failed，丢失已落盘成果**（2026-05-27 已修）：cultural 首次 develop 跑满 30min 超时被 kill，但 codex 已落盘 ~500 行 → 判 failed 要人工救回。
+  - 已改：`stage-runner.ts` case 'timeout' 对 develop/fix 先跑 `checkCodeChangeApplied`——有落盘→标 `blocked`（保留成果，提示 git diff review / advance / 重跑）；无落盘→仍 `failed`（提示调 stage_timeouts 或拆小任务）。两向均测过（有落盘→blocked、无落盘→failed）。
 - **develop 产出无编译/类型验证，codex 会臆测 SDK API**：codex 在 spawn 沙箱里编译不了目标项目，对不确定的 API 直接猜——cultural 里 `createSignedURLs` 返回类型猜错、用了不存在的 `URL.percentEncodedPath` → 直接编译失败。code-review(claude) 抓到了一部分，但根因是 develop 无任何编译反馈。
   - 改法（探索）：develop 后若 config.commands.build 非空，自动跑一次 build 把编译错误回灌；或在 prompt 里强约束"不确定的三方 API 必须基于项目已 import 的版本核实，不可臆测签名"。
 - **change_request 流程缺失**：cultural archive 后真机又测出一串 bug，全靠人工手改。vibeflow 设计文档提过 change_request 但无实现——"已锁定/已归档 feature 又要改"没有正规支线。
