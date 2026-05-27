@@ -118,10 +118,12 @@ export const PLAN_REVIEW_PROMPT = `# Plan Review 阶段 Prompt 模板
 ## 输入
 - 需求文档：{{requirement_file}}
 - 方案文档：{{plan_file}}
+- 人工决策（如有，**评审基线之一**）：{{human_decisions_file}}
 - 项目规则：{{project_rules}}
 
 ## 任务
 评审方案，把所有问题输出为评审报告。
+**若存在人工决策，方案必须与之一致**——发现方案违背已拍板的决策（如把已决问题当待确认重抛、或方向与决策冲突），属 Blocker/Major，须明确指出。
 
 ## 评审维度
 1. 需求理解是否准确，是否有遗漏
@@ -203,6 +205,7 @@ export const DEVELOP_PROMPT = `# Develop 阶段 Prompt 模板
 - 不得擅自扩大需求范围。
 - 如发现 final_plan 有问题，停下，说明 change_request 理由而非强行编码。
 - 高风险操作（删数据、改权限、改支付逻辑、push）必须停下等待人工确认。
+- **不要臆测三方库/SDK 的 API**：调用任何三方库前，先确认项目实际锁定的版本（看 lockfile / 已有 import / 现有调用），按该版本真实存在的签名和返回类型来写。不确定时，宁可读现有代码里同类用法照搬，也不要凭印象猜方法名/参数/返回结构——猜错会直接编译失败。
 
 ${CODE_OUTPUT_INSTRUCTION}
 `;
@@ -332,6 +335,7 @@ export const FIX_PROMPT = `# Fix 阶段 Prompt 模板
 - 不得扩大需求范围。
 - 不得做无关重构。
 - 如修复方案需要变更 final_plan，停下说明 change_request 理由。
+- **不要臆测三方库/SDK 的 API**：按项目实际锁定版本真实存在的签名/返回类型来写，不确定就照搬现有代码同类用法，不要凭印象猜——猜错会直接编译失败。
 
 ${CODE_OUTPUT_INSTRUCTION}
 `;

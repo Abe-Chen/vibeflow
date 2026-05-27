@@ -227,6 +227,39 @@ async function checkRecentFileModification(
 }
 
 /**
+ * P0-2: develop/fix 落盘后自动跑 build 验证编译。
+ * codex 在 spawn 沙箱里编译不了目标项目，对不确定的三方 API 会臆测签名导致编译失败；
+ * 这里在落盘后跑一次 config.commands.build，把编译错误回灌给用户/后续阶段。
+ * 返回 null = 未配置 build（跳过）；否则返回是否通过 + 错误摘要。
+ */
+async function runBuildCheck(
+  projectRoot: string,
+  buildCommands: string[] | undefined,
+): Promise<{ passed: boolean; output: string } | null> {
+  const cmds = (buildCommands ?? []).filter((c) => c && c.trim());
+  if (cmds.length === 0) return null;
+
+  for (const cmd of cmds) {
+    try {
+      const { stdout, stderr } = await execFileAsync('sh', ['-c', cmd], {
+        cwd: projectRoot,
+        timeout: 5 * 60 * 1000,
+        maxBuffer: 2 * 1024 * 1024,
+      });
+      // 命令成功（exit 0）→ 继续下一条
+      void stdout; void stderr;
+    } catch (err) {
+      const e = err as { stdout?: string; stderr?: string; message?: string };
+      const out = `${e.stderr ?? ''}\n${e.stdout ?? ''}`.trim() || e.message || '构建失败';
+      // 取尾部（编译错误通常在末尾）
+      const tail = out.length > 1500 ? '…\n' + out.slice(-1500) : out;
+      return { passed: false, output: `$ ${cmd}\n${tail}` };
+    }
+  }
+  return { passed: true, output: '' };
+}
+
+/**
  * #54: 阶段开始前提醒未配置的项目命令。
  * - test 阶段：commands.test 为空时，AI 没有实际可跑的测试命令，验收只能靠人肉/口述，价值大打折扣。
  * - develop / fix 阶段：commands.build / lint 为空时给出软提示，便于做编译/静态检查自检。
@@ -405,6 +438,20 @@ export async function runStage(opts: RunStageOptions): Promise<StageRunOutcome> 
           break;
         }
         log.success(`代码落盘检测：${diffCheck.summary}`);
+
+        // P0-2: 落盘后跑 build 验证编译（配了 commands.build 才跑）
+        const buildResult = await runBuildCheck(projectRoot, config.commands?.build);
+        if (buildResult && !buildResult.passed) {
+          stage.status = 'blocked';
+          stage.notes = `代码已落盘但构建失败（commands.build）。需修复编译错误后再推进。`;
+          log.success(`产物已写入: ${path.relative(projectRoot, outputPath)}`);
+          log.error('⚠️ 代码已落盘，但 commands.build 构建失败：');
+          for (const line of buildResult.output.split('\n')) console.log('    ' + chalk.gray(line));
+          log.hint(`常见原因：模型臆测了三方 API 签名/类型。请修复后：`);
+          log.hint(`  重跑 vibeflow ${opts.stageId}（让模型据错误修正），或手动修复后 vibeflow advance --feature ${featureName}`);
+          break;
+        }
+        if (buildResult?.passed) log.success('构建验证通过（commands.build）');
       }
 
       if (stage.human_gate) {

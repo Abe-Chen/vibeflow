@@ -31,7 +31,7 @@ export interface BuiltContext {
 const STAGE_CONTEXT_KEYS: Record<string, string[]> = {
   requirement: ['user_input', 'project_overview', 'product_rules', 'output_path'],
   plan: ['requirement_file', 'human_decisions_file', 'project_rules', 'related_paths', 'output_path'],
-  plan_review: ['requirement_file', 'plan_file', 'project_rules', 'output_path'],
+  plan_review: ['requirement_file', 'plan_file', 'human_decisions_file', 'project_rules', 'output_path'],
   finalize: ['requirement_file', 'plan_file', 'review_file', 'human_decisions_file', 'output_path'],
   develop: ['final_plan_file', 'human_decisions_file', 'project_rules', 'output_path'],
   code_review: ['final_plan_file', 'implementation_report_file', 'diff_summary', 'project_rules', 'output_path'],
