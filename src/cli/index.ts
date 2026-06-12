@@ -19,7 +19,7 @@ const program = new Command();
 program
   .name('vibeflow')
   .description('多模型 AI 研发工作流系统：把多个 AI 编程工具组织成一个可控的研发团队')
-  .version('0.1.0', '-v, --version', '查看版本号')
+  .version('0.2.0', '-v, --version', '查看版本号')
   .helpOption('-h, --help', '查看帮助');
 
 registerInitCommand(program);

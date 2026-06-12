@@ -558,6 +558,34 @@ commands:
 - **可逆续接**：已交付的任务随时 `vibeflow develop` 即可继续，状态自动回到 `in_progress`，`meta.delivered_at` 保留。
 - **幂等**：重复 `deliver` 不刷新交付时间，提示已是交付状态。
 
+### 6.7 重跑某个阶段（--force）
+
+对**还没完成**的阶段（`in_progress` / `blocked` / `failed`），直接再跑一次该阶段命令即可覆盖重来。
+
+但对**已经完成**的阶段，默认会被拦下，防止误覆盖：
+
+```
+⚠ 阶段 plan 已完成。如需重做，加 --force 重跑。
+  --force 会重新执行本阶段，并把其后已完成的阶段重置为待执行（它们的输入已过时，需要重跑）。
+```
+
+加 `--force` 即可重做。**它会级联把该阶段之后所有「已完成」的阶段重置为待执行**——因为它们的输入（本阶段产物）已经变了，旧结果不再可信：
+
+```bash
+# 对方案不满意，重新出一版（会把 plan-review/finalize 等下游一并重置）
+vibeflow plan --force
+
+# 重跑后可一路 chain 下去重新评审、定稿
+vibeflow plan --force -y
+```
+
+要点：
+
+- **不会全部重来**：只重置该阶段及其下游，前面的需求等保持不变。
+- **尊重 skip**：你主动 `--skip` 跳过的阶段不会被重新激活，只重置 `completed` 的。
+- **已收尾任务（done/delivered）也能 force**：会自动把任务重新打开为 `in_progress`。
+- **与 change-request 的区别**：`change-request` 用于已收尾任务、固定从 develop 重开、不动已锁定方案；`--force` 更通用，可针对任意已完成阶段（含 plan/finalize）重做。想推翻**方案方向**用 `--force plan`，想在锁定方案内改代码用 `change-request`。
+
 ---
 
 ## 7. 模型调用的两种模式

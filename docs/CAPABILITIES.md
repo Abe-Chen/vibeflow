@@ -1,6 +1,6 @@
 # vibeflow 能力总览
 
-> 版本 v0.1.0 · Node ≥20 · 本文档只描述**已实现并验证**的能力，规划中的 V2 见末尾「尚未具备」。
+> 版本 v0.2.0 · Node ≥20 · 本文档只描述**已实现并验证**的能力，规划中的 V2 见末尾「尚未具备」。
 
 ## 一句话
 
@@ -79,6 +79,7 @@ develop / fix 阶段，三家 CLI 都能**直接修改/创建项目代码文件*
 ### 灵活性
 - **角色↔模型解耦**：`config.yaml` 里任意角色可绑定任意模型，命令行 `--model` 临时覆盖
 - **chain 模式**：阶段完成后可连续推进（`-y` 一键 chain / 默认 [Y/n] / `--no-chain` 单步）
+- **阶段重跑（`--force`）**：对产物不满意时重做任意**已完成**阶段（含 plan/finalize），并级联把其下游已完成阶段重置为待执行——不必全部重来、也不必手改 run.json（尊重主动 skip 的阶段）
 - **export 兜底**：CLI 不可用时导出 prompt 文件，手动到任意工具执行
 
 ---
@@ -111,4 +112,4 @@ Node/TypeScript、Flutter/Dart、Python、Rust、Go、Java/Kotlin（Gradle/Maven
 
 ---
 
-*本文档基于 commit `ec52d8f`（2026-05-27）整理。能力变更请同步更新本文件与 `docs/BACKLOG.md`。*
+*本文档对应 v0.1.0，最近更新 2026-06-12（commit `118ebd7`）。能力变更请同步更新本文件与 `docs/BACKLOG.md`。*

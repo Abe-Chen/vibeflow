@@ -31,6 +31,8 @@ export interface RunStageOptions {
   requireLockedPlan?: boolean;
   /** 必须满足"评审者与开发者不同模型"的约束 */
   requireDifferentFromDeveloper?: boolean;
+  /** 强制重跑已完成的阶段（并级联把其后已完成阶段重置为待执行） */
+  force?: boolean;
   /** 内部：当前 chain 深度，防止无限递归 */
   _chainDepth?: number;
 }
@@ -311,8 +313,29 @@ export async function runStage(opts: RunStageOptions): Promise<StageRunOutcome> 
   const stage = findStage(state, opts.stageId);
 
   if (stage.status === 'completed') {
-    log.warn(`阶段 ${opts.stageId} 已完成。如需重新执行，请先手动改写 run.json 或使用 --force（待实现）`);
-    return { feature: featureName, stage, result: { status: 'cancelled', modelId: stage.model ?? '', invokeMode: opts.invokeMode ?? 'spawn', durationMs: 0 }, outputWritten: false };
+    if (!opts.force) {
+      log.warn(`阶段 ${opts.stageId} 已完成。如需重做，加 --force 重跑。`);
+      log.hint('--force 会重新执行本阶段，并把其后已完成的阶段重置为待执行（它们的输入已过时，需要重跑）。');
+      return { feature: featureName, stage, result: { status: 'cancelled', modelId: stage.model ?? '', invokeMode: opts.invokeMode ?? 'spawn', durationMs: 0 }, outputWritten: false };
+    }
+    // --force 重跑：清掉本阶段旧的完成痕迹，并级联把其后"已完成"的阶段重置为 pending。
+    // 只重置 completed（不动用户主动 skipped 的阶段，尊重其跳过意图）。
+    const stageIdx = state.stages.findIndex((s) => s.id === opts.stageId);
+    const downstreamDone = state.stages.slice(stageIdx + 1).filter((s) => s.status === 'completed');
+    for (const s of downstreamDone) {
+      s.status = 'pending';
+      s.completed_at = undefined;
+      s.notes = undefined;
+    }
+    stage.completed_at = undefined;
+    stage.notes = undefined;
+    // 任务若已收尾（done），重新打开为进行中（delivered 由下方统一处理）
+    if (state.status === 'done') state.status = 'in_progress';
+    if (downstreamDone.length) {
+      log.warn(`--force 重跑 ${opts.stageId}：已把其后 ${downstreamDone.length} 个已完成阶段重置为待执行（${downstreamDone.map((s) => s.id).join(' → ')}）。`);
+    } else {
+      log.info(`--force 重跑 ${opts.stageId}。`);
+    }
   }
 
   validateStageOrder(state, opts.stageId);

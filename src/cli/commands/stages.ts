@@ -13,6 +13,8 @@ interface StageCommandOptions {
   yes?: boolean;
   /** commander: `--no-chain` 会生成此字段，默认 true，传 --no-chain 后为 false */
   chain?: boolean;
+  /** 强制重跑已完成阶段 */
+  force?: boolean;
 }
 
 interface StageCommandDef {
@@ -60,7 +62,8 @@ export function registerStageCommands(program: Command): void {
       .option('--model <id>', '覆盖角色配置的默认模型')
       .option('--export', '改用 export 兜底模式：只生成 prompt 文件，不调 CLI')
       .option('-y, --yes', '完成后自动 chain 到下一阶段（不询问）')
-      .option('--no-chain', '完成后既不询问也不 chain，停在当前阶段');
+      .option('--no-chain', '完成后既不询问也不 chain，停在当前阶段')
+      .option('--force', '强制重跑已完成的阶段（会把其后已完成阶段重置为待执行）');
 
     if (def.acceptsMessage) {
       cmd.option('-m, --message <text>', '附加给模型的提示信息');
@@ -78,6 +81,7 @@ export function registerStageCommands(program: Command): void {
           userVariables: opts.message ? { user_input: opts.message } : undefined,
           yes: opts.yes,
           noChain: opts.chain === false,
+          force: opts.force,
           requireLockedPlan: def.requireLockedPlan,
           requireDifferentFromDeveloper: def.requireDifferentFromDeveloper,
         });

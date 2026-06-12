@@ -21,6 +21,7 @@ interface RequirementOptions {
   export?: boolean;
   yes?: boolean;
   chain?: boolean;
+  force?: boolean;
 }
 
 /** 去掉编辑器引导注释行，返回正文 */
@@ -154,6 +155,7 @@ export async function runRequirement(opts: RequirementOptions): Promise<void> {
       },
       yes: opts.yes,
       noChain: opts.chain === false,
+      force: opts.force,
     });
   } catch (err) {
     log.error((err as Error).message);
@@ -173,6 +175,7 @@ export function registerRequirementCommand(program: Command): void {
     .option('--export', '改用 export 兜底模式：只生成 prompt 文件，不调 CLI')
     .option('-y, --yes', '需求阶段完成后会触发 human_gate，本选项暂不影响（需求阶段不 chain）')
     .option('--no-chain', '完成后不自动 chain（requirement 阶段本身就是 human_gate，本选项一般不需要）')
+    .option('--force', '强制重跑已完成的需求阶段（会把其后已完成阶段重置为待执行）')
     .action(async (opts: RequirementOptions) => {
       await runRequirement(opts);
     });

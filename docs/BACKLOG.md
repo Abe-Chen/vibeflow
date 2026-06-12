@@ -48,6 +48,16 @@
   - ✅ gemini 落盘也已解决（2026-05-26）：`-p` 无值+stdin 会报 "Not enough arguments following: p"，改为 `--prompt ""` 空值占位+stdin（base.ts 保留空串参数避免被过滤）；`--skip-trust` 信任当前工作区，防 yolo/approval 被降级回 default；develop/fix 加 `--approval-mode yolo`。e2e 实测 gemini 经 vibeflow develop 真落盘。**至此 codex/claude/gemini 三家 headless 均可经 vibeflow develop 落盘。**
 - ⏳ 待补：引入测试框架 + 为 `assertDeliverable` 门禁补最小单测（项目目前无测试框架）
 
+## v0.2 阶段重跑 --force（2026-06-12）
+
+### ✅ 已完成
+
+- **阶段重跑 `--force`**：补齐"已完成阶段无法重跑"的缺口（此前代码里是 `--force（待实现）`，只能手改 run.json）。
+  - `stage-runner.ts`：已完成阶段加 `--force` 放行重跑；**级联**把其后所有 `completed` 阶段重置为 `pending`（输入已过时），只重置 completed、不动用户主动 `skipped` 的阶段；任务若已 `done`/`delivered` 则自动重开为 `in_progress`。重跑后可正常 chain 一路重做下游。
+  - `stages.ts`（8 个阶段命令）+ `requirement.ts` 均加 `--force` 选项（`-f` 已被 `--feature` 占用，故无短选项）。
+  - 与 `change-request` 分工：`--force` 通用、可针对任意已完成阶段（含 plan/finalize 推翻方案）；`change-request` 专用于已收尾任务、固定从 develop 重开、不动已锁定方案。
+  - 文档同步：CAPABILITIES「灵活性」+ USAGE §6.7 + 版本 bump 0.1.0→0.2.0（package.json + cli/index.ts）。
+
 ## V1 之后 / V2
 
 - `lock-plan` 严格化：hash + `.locked` 标记（当前是软门禁——只校验「非占位 + finalize 已 advance」）
