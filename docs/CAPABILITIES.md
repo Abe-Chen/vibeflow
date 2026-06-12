@@ -41,14 +41,14 @@ develop / fix 阶段，三家 CLI 都能**直接修改/创建项目代码文件*
 
 ---
 
-## 三、命令清单（21 个）
+## 三、命令清单（22 个）
 
 | 类别 | 命令 | 作用 |
 |------|------|------|
 | **项目** | `init` | 生成 `.ai-dev/` 骨架 + `CLAUDE.md`/`AGENTS.md` 桥接 |
 | | `doctor` | 体检：模型 CLI 可用性 + 角色映射 + 项目命令 + 工具链就绪 + git 状态 |
 | | `learn` | AI 扫描项目（目录/manifest/源码采样/git log）生成三份 rules 草稿 |
-| **任务** | `new` / `status` | 创建任务 / 查看阶段状态 |
+| **任务** | `new` / `status` / `next` | 创建任务 / 查看阶段状态 / 看下一步该跑什么命令 |
 | **阶段** | `requirement` `plan` `plan-review` `finalize` `develop` `code-review` `fix` `test` `archive` | 9 个流水线阶段 |
 | **流转** | `advance` | 标当前阶段完成并推进（human_gate 确认） |
 | | `deliver` | 方案锁定后「只要方案」交付收尾（软终态 delivered，可逆续接 develop） |
@@ -102,7 +102,7 @@ Node/TypeScript、Flutter/Dart、Python、Rust、Go、Java/Kotlin（Gradle/Maven
 ## 七、尚未具备（规划中 / V2）
 
 - 多模型**并行**出方案（探索池：`plan --multi` / consult / synthesize / accept-plan）
-- 路径互通 + `vibeflow next` / `plan-status` 认知引导
+- 路径互通 + `plan-status` 认知引导（`vibeflow next` 已实现，见命令清单）
 - Judge Agent（多模型意见冲突的结构化裁决）
 - 本地 Web 可视化工作台
 - 多 feature 的 worktree 隔离

@@ -48,7 +48,7 @@
   - ✅ gemini 落盘也已解决（2026-05-26）：`-p` 无值+stdin 会报 "Not enough arguments following: p"，改为 `--prompt ""` 空值占位+stdin（base.ts 保留空串参数避免被过滤）；`--skip-trust` 信任当前工作区，防 yolo/approval 被降级回 default；develop/fix 加 `--approval-mode yolo`。e2e 实测 gemini 经 vibeflow develop 真落盘。**至此 codex/claude/gemini 三家 headless 均可经 vibeflow develop 落盘。**
 - ⏳ 待补：引入测试框架 + 为 `assertDeliverable` 门禁补最小单测（项目目前无测试框架）
 
-## v0.2 阶段重跑 --force（2026-06-12）
+## v0.2（2026-06-12）：阶段重跑 --force + next 导航
 
 ### ✅ 已完成
 
@@ -57,6 +57,13 @@
   - `stages.ts`（8 个阶段命令）+ `requirement.ts` 均加 `--force` 选项（`-f` 已被 `--feature` 占用，故无短选项）。
   - 与 `change-request` 分工：`--force` 通用、可针对任意已完成阶段（含 plan/finalize 推翻方案）；`change-request` 专用于已收尾任务、固定从 develop 重开、不动已锁定方案。
   - 文档同步：CAPABILITIES「灵活性」+ USAGE §6.7 + 版本 bump 0.1.0→0.2.0（package.json + cli/index.ts）。
+
+- **`vibeflow next` 导航引导**（V2「认知引导」首项落地）：读 `run.json` 纯本地推断"下一步该跑什么命令"，不调模型。
+  - `core/next-advisor.ts`（纯函数 `adviseNext(state)→{headline,commands,reason,finished}`，便于复用/测试）+ `cli/commands/next.ts`（紧凑进度条 + 渲染 + 0/1/多任务处理）。
+  - 覆盖状态：created→requirement、pending→该阶段、human_gate in_progress→advance（finalize 额外给 deliver）、blocked（develop/fix 先 git diff）、failed→重跑、done→change-request、delivered→develop 续接。
+  - 多任务逐个列下一步、`next -f` 钻取；无活跃任务时列已收尾任务并引导。7 个状态场景实测通过。
+  - 文档同步：CAPABILITIES 命令表（21→22）+「尚未具备」标记 next 已实现 + USAGE §4.6.1。
+  - 剩余「认知引导」未做项：路径互通、`plan-status`。
 
 ## V1 之后 / V2
 

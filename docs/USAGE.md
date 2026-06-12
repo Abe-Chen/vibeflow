@@ -446,6 +446,27 @@ schedule-filter  [standard_feature]
   ○ pending     archive
 ```
 
+### 4.6.1 不知道下一步敲什么？用 next
+
+`status` 给全貌，`next` 直接告诉你**下一步该跑哪条命令**——读 `run.json` 自动判断当前卡在哪：
+
+```bash
+vibeflow next
+```
+
+```
+登录页改版  [standard_feature]
+  ✓requirement › ✓plan › ●plan-review › ○finalize › ○develop › ○code-review › ○fix › ○test › ○archive
+
+ℹ 等待人工确认：方案定稿（finalize）
+  vibeflow advance
+  vibeflow deliver
+  方案已生成、待你确认。检查无误后 advance 继续开发；若只要这份方案、本轮不编码，用 deliver 收尾。
+```
+
+- 不带参数看进行中的任务；有多个时逐个列下一步，`next -f <任务名>` 钻取某个。
+- 按状态给贴心建议：human_gate → advance、blocked → 先 git diff、done → change-request、delivered → develop 续接。
+
 ---
 
 ## 5. 三道门禁（看不见的安全网）

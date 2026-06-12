@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import { registerInitCommand } from './commands/init.js';
 import { registerNewCommand } from './commands/new.js';
 import { registerStatusCommand } from './commands/status.js';
+import { registerNextCommand } from './commands/next.js';
 import { registerDoctorCommand } from './commands/doctor.js';
 import { registerRequirementCommand } from './commands/requirement.js';
 import { registerAdvanceCommand } from './commands/advance.js';
@@ -25,6 +26,7 @@ program
 registerInitCommand(program);
 registerNewCommand(program);
 registerStatusCommand(program);
+registerNextCommand(program);
 registerDoctorCommand(program);
 registerLearnCommand(program);
 registerProfileCommand(program);
