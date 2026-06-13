@@ -1,6 +1,6 @@
 {
   "name": "vibeflow",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "多模型 AI 研发工作流系统：把 Codex / Claude / Gemini 等多个 AI 编程工具组织成一个可控、可评审、可验收的研发团队",
   "type": "module",
   "bin": {

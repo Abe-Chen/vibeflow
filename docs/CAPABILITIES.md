@@ -1,6 +1,6 @@
 # vibeflow 能力总览
 
-> 版本 v0.2.0 · Node ≥20 · 本文档只描述**已实现并验证**的能力，规划中的 V2 见末尾「尚未具备」。
+> 版本 v0.3.0 · Node ≥20 · 本文档只描述**已实现并验证**的能力，规划中的 V2 见末尾「尚未具备」。
 
 ## 一句话
 
@@ -115,4 +115,4 @@ Node/TypeScript、Flutter/Dart、Python、Rust、Go、Java/Kotlin（Gradle/Maven
 
 ---
 
-*本文档对应 v0.1.0，最近更新 2026-06-12（commit `118ebd7`）。能力变更请同步更新本文件与 `docs/BACKLOG.md`。*
+*本文档对应 v0.3.0，最近更新 2026-06-13（新增多模型探索池）。能力变更请同步更新本文件与 `docs/BACKLOG.md`。*
