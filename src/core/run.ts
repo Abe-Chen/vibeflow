@@ -36,6 +36,8 @@ export interface RunState {
     created_by?: string;
     /** 方案交付时间（ISO）；vibeflow deliver 写入，续接 develop 时保留 */
     delivered_at?: string;
+    /** final_plan 锁定时间（ISO）；finalize advance 锁定时写入，探索命令据此拒绝 */
+    final_plan_locked_at?: string;
   };
   /** 变更请求记录：feature 完成/交付后又发现问题时，vibeflow change-request 写入 */
   change_requests?: Array<{
@@ -44,6 +46,60 @@ export interface RunState {
     created_at: string;
     resolved_at?: string;
   }>;
+  /** 多模型探索池状态（plan --multi 等）；旧任务无此字段时视为 idle。详见 docs/designs/multi-model-explore-pool/ */
+  explore?: ExploreState;
+}
+
+export type ExploreStatus = 'idle' | 'running' | 'awaiting_accept' | 'accepted' | 'failed';
+export type ExploreArtifactKind = 'plan' | 'consult' | 'synthesis' | 'judge';
+
+/** 一份探索产物（候选方案 / 咨询记录 / 融合稿） */
+export interface ExploreArtifact {
+  id: string;
+  kind: ExploreArtifactKind;
+  status: 'ready' | 'failed';
+  batch_id?: string;
+  model: string;
+  /** 相对 feature 目录的产物路径，如 explore/plans/plan_001_codex.md */
+  file: string;
+  title?: string;
+  /** 该产物的输入来源（其他 artifact id 或文件） */
+  inputs?: string[];
+  created_at: string;
+}
+
+/** 一次探索调用失败记录（不影响正式 plan 状态） */
+export interface ExploreFailure {
+  batch_id?: string;
+  kind: 'plan' | 'consult' | 'synthesis';
+  model: string;
+  error: string;
+  stdout_file?: string;
+  stderr_file?: string;
+  created_at: string;
+}
+
+/** accept 历史的一条记录；accepted 指针是其末项的快照（不含 superseded_previous） */
+export interface AcceptRecord {
+  artifact_id: string;
+  source_file: string;
+  target_file: '01_plan_v1.md';
+  accepted_at: string;
+  superseded_previous?: boolean;
+}
+
+/** 探索池状态（挂在 RunState.explore，optional，旧任务缺失视为 idle） */
+export interface ExploreState {
+  version: 1;
+  status: ExploreStatus;
+  latest_batch_id?: string;
+  /** 全局单调递增的产物序号，下一个可用值 */
+  next_seq: number;
+  artifacts: ExploreArtifact[];
+  failures: ExploreFailure[];
+  /** 当前正式方案指针；由 accept_history 末项推导，acceptArtifact() 统一更新 */
+  accepted?: Omit<AcceptRecord, 'superseded_previous'>;
+  accept_history: AcceptRecord[];
 }
 
 export interface WorkflowTemplate {
