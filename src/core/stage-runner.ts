@@ -6,6 +6,7 @@ import { getFeatureDir, isVibeflowProject, resolveProjectRoot } from '../utils/p
 import { loadConfig, resolveModelForRole, resolveStageTimeout, VibeflowConfig } from './config.js';
 import { listFeatures, readRunState, writeRunState, StageState, RunState } from './run.js';
 import { STAGE_OUTPUT_FILENAME, buildContext } from './context.js';
+import { ensureOutputWritten } from './output-artifact.js';
 import { buildAdapterMap } from '../adapters/registry.js';
 import { AgentRunResult, InvokeMode } from '../adapters/types.js';
 import { advanceCurrentStage } from './advance.js';
@@ -100,28 +101,7 @@ function summarizeStdout(text: string, max = 6): string {
   return lines.slice(0, max).join('\n') + `\n... (省略 ${lines.length - max} 行)`;
 }
 
-async function ensureOutputWritten(
-  outputPath: string,
-  result: AgentRunResult,
-): Promise<boolean> {
-  await fs.ensureDir(path.dirname(outputPath));
-
-  const existed = await fs.pathExists(outputPath);
-  const meaningfullyExisted = existed
-    ? !(await isPlaceholderFile(outputPath))
-    : false;
-
-  if (meaningfullyExisted) {
-    return true;
-  }
-
-  const stdoutText = result.stdoutText?.trim();
-  if (stdoutText && stdoutText.length > 0) {
-    await fs.writeFile(outputPath, stdoutText + '\n', 'utf8');
-    return true;
-  }
-  return false;
-}
+// ensureOutputWritten / isPlaceholderFile 已抽取到 ./output-artifact.ts，供普通阶段与探索 runner 复用
 
 /**
  * 检查 develop / fix 阶段后，代码是否真的落盘了。
@@ -287,15 +267,6 @@ function warnMissingProjectCommands(config: VibeflowConfig, stageId: string): vo
     if (missing.length) {
       log.hint(`提示：config.yaml 的 commands.${missing.join(' / commands.')} 为空，${stageId} 阶段无法做编译/静态检查自检（仅提示，不影响执行）。`);
     }
-  }
-}
-
-async function isPlaceholderFile(file: string): Promise<boolean> {
-  try {
-    const content = await fs.readFile(file, 'utf8');
-    return /由 vibeflow new 占位生成/.test(content);
-  } catch {
-    return false;
   }
 }
 

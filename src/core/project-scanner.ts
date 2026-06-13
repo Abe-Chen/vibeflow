@@ -98,8 +98,13 @@ function shouldSkipDir(name: string): boolean {
   return IGNORED_DIRS.has(name);
 }
 
-function shouldSkipFile(name: string): boolean {
+/** 是否为敏感或二进制文件（.env/.pem/.key/id_rsa/数据库/媒体/压缩等）。探索池 consult/synthesize 安全读取也复用此判断。 */
+export function isSensitiveOrBinaryFile(name: string): boolean {
   return IGNORED_FILE_PATTERNS.some((re) => re.test(name));
+}
+
+function shouldSkipFile(name: string): boolean {
+  return isSensitiveOrBinaryFile(name);
 }
 
 // 内容级密钥脱敏：文件名过滤拦不住"源码里硬编码的密钥"，这里在内容进入 prompt/日志前再过一道。
