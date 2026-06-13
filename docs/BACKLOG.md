@@ -65,6 +65,24 @@
   - 文档同步：CAPABILITIES 命令表（21→22）+「尚未具备」标记 next 已实现 + USAGE §4.6.1。
   - 剩余「认知引导」未做项：路径互通、`plan-status`。
 
+## 探索池（多模型并行出方案）实现完成（2026-06-13）
+
+按 `docs/designs/multi-model-explore-pool/` 设计 10 步分步实现，每步 typecheck/build + 独立 commit：
+
+- [1] run.ts 类型 + explore-state（ensureExploreState / isFinalPlanLocked / allocate / register / accept / resetDownstream）
+- [2] output-artifact 抽取 + explore-input 安全读取（脱敏 / 越界与敏感文件拒绝）
+- [3] adapters quiet 参数 + parallel-plan 并发 runner（orchestrator 统一写 run.json）
+- [4] plan --multi / --models 接入 + 决策菜单 + awaiting_accept 防绕过
+- [5] accept-plan（复制为 01_plan_v1 + 来源标注 + 重置下游 + chain）
+- [6] advance / next 的 explore 防绕过
+- [7] consult / synthesize（单模型 explore runner）
+- [8] finalize 锁定标记 + change-request 放宽到锁定任务
+- [9] status 探索池摘要 + CAPABILITIES / USAGE 文档
+- [10] 验证
+
+**真实模型端到端验证通过**：plan --multi(codex+claude) → 部分失败语义（1 成功即 awaiting_accept）→ 防绕过 → accept-plan → next 引导。
+**仍未做（设计 P2 预留）**：`plan --multi-extend` / `plan --add` / `plan-status` / 自动 Judge。
+
 ## V1 之后 / V2
 
 - `lock-plan` 严格化：hash + `.locked` 标记（当前是软门禁——只校验「非占位 + finalize 已 advance」）

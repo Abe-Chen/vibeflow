@@ -72,6 +72,13 @@ export async function runStatus(opts: StatusOptions = {}): Promise<void> {
       const modelMark = stage.model ? chalk.gray(` (${stage.model})`) : '';
       console.log(`  ${badge(stage.status)}  ${stage.id}${modelMark}${gateMark}${lockMark}`);
     }
+
+    if (state.explore && state.explore.status !== 'idle') {
+      const e = state.explore;
+      const ready = e.artifacts.filter((a) => a.status === 'ready').length;
+      const acc = e.accepted ? `  已选 ${chalk.cyan(e.accepted.artifact_id)}` : '';
+      log.hint(`探索池: ${e.status}  候选 ${ready}  失败 ${e.failures.length}${acc}`);
+    }
   }
 }
 

@@ -41,7 +41,7 @@ develop / fix 阶段，三家 CLI 都能**直接修改/创建项目代码文件*
 
 ---
 
-## 三、命令清单（22 个）
+## 三、命令清单（25 个）
 
 | 类别 | 命令 | 作用 |
 |------|------|------|
@@ -50,6 +50,7 @@ develop / fix 阶段，三家 CLI 都能**直接修改/创建项目代码文件*
 | | `learn` | AI 扫描项目（目录/manifest/源码采样/git log）生成三份 rules 草稿 |
 | **任务** | `new` / `status` / `next` | 创建任务 / 查看阶段状态 / 看下一步该跑什么命令 |
 | **阶段** | `requirement` `plan` `plan-review` `finalize` `develop` `code-review` `fix` `test` `archive` | 9 个流水线阶段 |
+| **探索池** | `plan --multi` / `accept-plan` / `consult` / `synthesize` | 多模型并行出方案 → 选定 / 咨询 / 融合（可选叠加，详见 §三补） |
 | **流转** | `advance` | 标当前阶段完成并推进（human_gate 确认） |
 | | `deliver` | 方案锁定后「只要方案」交付收尾（软终态 delivered，可逆续接 develop） |
 | | `change-request` | 对已收尾（done/delivered）任务发起变更，重开到开发阶段走轻量修订 |
@@ -101,8 +102,10 @@ Node/TypeScript、Flutter/Dart、Python、Rust、Go、Java/Kotlin（Gradle/Maven
 
 ## 七、尚未具备（规划中 / V2）
 
-- 多模型**并行**出方案（探索池：`plan --multi` / consult / synthesize / accept-plan）
-- 路径互通 + `plan-status` 认知引导（`vibeflow next` 已实现，见命令清单）
+- `plan --multi-extend`（单方案中途转多方案）/ `plan --add <model>`（追加模型）/ `plan-status`（探索池可视化）——P2 预留挂点
+- 自动 Judge（多模型方案的结构化裁决，当前仅预留 `judge` artifact 类型）
+- 本地 Web 可视化工作台 · 多 feature 的 worktree 隔离
+- （多模型**并行**出方案探索池 `plan --multi` / consult / synthesize / accept-plan 已实现，见命令清单；`vibeflow next` 已实现）
 - Judge Agent（多模型意见冲突的结构化裁决）
 - 本地 Web 可视化工作台
 - 多 feature 的 worktree 隔离

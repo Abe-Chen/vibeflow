@@ -607,6 +607,35 @@ vibeflow plan --force -y
 - **已收尾任务（done/delivered）也能 force**：会自动把任务重新打开为 `in_progress`。
 - **与 change-request 的区别**：`change-request` 用于已收尾任务、固定从 develop 重开、不动已锁定方案；`--force` 更通用，可针对任意已完成阶段（含 plan/finalize）重做。想推翻**方案方向**用 `--force plan`，想在锁定方案内改代码用 `change-request`。
 
+### 6.8 多模型并行出方案（探索池）
+
+复杂需求想让多个模型各出一套方案再择优时，用 `plan --multi`（可选叠加，不加 `--multi` 时 plan 行为与现状完全一致）：
+
+```bash
+# 让 2~3 个模型并行各出一套方案（默认取 planner 的 default+fallback；也可 --models codex,claude,gemini）
+vibeflow plan --multi
+
+# 产物落 explore/plans/，跑完停在决策菜单（即使 -y 也必须人工选择）
+```
+
+完成后按菜单选择（探索池人主导）：
+
+| 想做什么 | 命令 |
+|---|---|
+| 选定某方案 → 进入 plan-review | `vibeflow accept-plan <id>` |
+| 就某方案咨询另一个模型 | `vibeflow consult --about <id> --model <m> -m "<问题>"` |
+| 融合多份方案为一版 | `vibeflow synthesize --base <id1>,<id2> --model <m>` |
+| 重出一批（保留历史） | `vibeflow plan --multi --force` |
+| 放弃探索、回单方案 | `vibeflow plan --force` |
+
+要点：
+
+- **正式输入永远只有 `01_plan_v1.md`**：`accept-plan` 才把某个候选复制成它并进入 plan-review；探索产物只存在 `explore/`。
+- **不能绕过选择**：`awaiting_accept` 时直接 `advance` 或单方案 `plan` 会被拒，必须 `accept-plan` 或 `plan --force`。
+- **安全**：`consult`/`synthesize` 读取的文件经密钥脱敏、拒绝项目外路径与敏感文件。
+- **锁定后**：finalize 锁定后所有探索命令拒绝，变更走 `change-request`。
+- **可追溯**：`explore/` 下候选/咨询/融合产物与 `run.json.explore` 的 accept 历史永久保留；`vibeflow status` 显示探索池摘要。
+
 ---
 
 ## 7. 模型调用的两种模式
