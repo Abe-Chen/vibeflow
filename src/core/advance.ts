@@ -17,6 +17,18 @@ export function advanceCurrentStage(state: RunState, opts: { skip?: boolean } = 
   }
   const current = state.stages[idx];
 
+  // B2 规则1：探索池等待选择时禁止 advance 跳过 accept（否则 plan 被误标完成、01_plan_v1 可能仍是旧/占位）
+  if (
+    current.id === 'plan' &&
+    state.explore?.status === 'awaiting_accept' &&
+    current.status !== 'completed' &&
+    current.status !== 'skipped'
+  ) {
+    throw new Error(
+      '探索池正在等待选择正式方案，不能 advance。请先 vibeflow accept-plan <id> 选定，或 vibeflow plan --force 放弃探索',
+    );
+  }
+
   if (current.status === 'completed' || current.status === 'skipped') {
     // already done, just try to advance
   } else if (opts.skip) {

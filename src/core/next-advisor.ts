@@ -56,6 +56,27 @@ export function adviseNext(state: RunState): NextAdvice {
     };
   }
 
+  // 1.5) 探索池状态优先引导（awaiting_accept / failed）
+  if (state.explore?.status === 'awaiting_accept') {
+    const candidates = state.explore.artifacts.filter(
+      (a) => (a.kind === 'plan' || a.kind === 'synthesis') && a.status === 'ready',
+    );
+    return {
+      headline: '探索池等待选择正式方案',
+      commands: [`vibeflow accept-plan ${candidates[0]?.id ?? '<id>'}`],
+      reason: `已有 ${candidates.length} 个候选。选定一份进入 plan-review；或 consult / synthesize 继续探索，plan --force 放弃探索。`,
+      finished: false,
+    };
+  }
+  if (state.explore?.status === 'failed') {
+    return {
+      headline: '多模型出方案全部失败',
+      commands: ['vibeflow plan --multi --force'],
+      reason: '本批探索全部失败，可重试或换 --models；或 vibeflow plan --force 回单方案。',
+      finished: false,
+    };
+  }
+
   // 2) 定位当前阶段（current_stage 优先；兜底取第一个未完成阶段）
   const current = state.stages.find((s) => s.id === state.current_stage)
     ?? state.stages.find((s) => s.status !== 'completed' && s.status !== 'skipped');
