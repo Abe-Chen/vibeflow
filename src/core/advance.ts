@@ -44,6 +44,12 @@ export function advanceCurrentStage(state: RunState, opts: { skip?: boolean } = 
     current.completed_at = new Date().toISOString();
   }
 
+  // finalize 完成即锁定方案（§6.6）：之后 plan/探索命令一律拒绝，变更走 change-request
+  if (current.id === 'finalize' && current.status === 'completed') {
+    current.locked = true;
+    if (!state.meta.final_plan_locked_at) state.meta.final_plan_locked_at = new Date().toISOString();
+  }
+
   // 找下一个未完成阶段
   const next = state.stages.slice(idx + 1).find((s) => s.status !== 'completed' && s.status !== 'skipped');
   if (next) {

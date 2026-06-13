@@ -2,6 +2,7 @@ import path from 'node:path';
 import fs from 'fs-extra';
 import { getFeatureDir } from '../utils/paths.js';
 import { RunState, StageState, writeRunState } from './run.js';
+import { isFinalPlanLocked } from './explore-state.js';
 
 export const CHANGE_REQUEST_FILE = 'change_requests.md';
 
@@ -32,9 +33,9 @@ export async function createChangeRequest(
   state: RunState,
   reason: string,
 ): Promise<ChangeRequestResult> {
-  if (state.status !== 'done' && state.status !== 'delivered') {
+  if (state.status !== 'done' && state.status !== 'delivered' && !isFinalPlanLocked(state)) {
     throw new Error(
-      `change-request 仅用于已收尾的任务（done / delivered）。当前任务状态为 ${state.status}，`
+      `change-request 用于已收尾（done / delivered）或方案已锁定的任务。当前状态为 ${state.status} 且方案未锁定，`
       + `进行中的任务直接运行对应阶段命令修改即可。`,
     );
   }
