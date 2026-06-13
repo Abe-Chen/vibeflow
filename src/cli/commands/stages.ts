@@ -1,8 +1,12 @@
 import { Command } from 'commander';
 import { log } from '../../utils/logger.js';
-import { runStage } from '../../core/stage-runner.js';
+import { runStage, pickFeature } from '../../core/stage-runner.js';
 import { InvokeMode } from '../../adapters/types.js';
 import { loadConfig } from '../../core/config.js';
+import { readRunState, writeRunState } from '../../core/run.js';
+import { ensureExploreState, abandonExploreToSingle } from '../../core/explore-state.js';
+import { orchestratePlanMulti } from '../../core/parallel-plan.js';
+import { printPlanMultiMenu } from '../explore-menu.js';
 import { resolveProjectRoot } from '../../utils/paths.js';
 
 interface StageCommandOptions {
@@ -15,6 +19,10 @@ interface StageCommandOptions {
   chain?: boolean;
   /** 强制重跑已完成阶段 */
   force?: boolean;
+  /** plan --multi：多模型并行出方案 */
+  multi?: boolean;
+  /** plan --models：指定参与 --multi 的模型（逗号分隔） */
+  models?: string;
 }
 
 interface StageCommandDef {
@@ -53,6 +61,55 @@ async function ensureRoleConfigured(stageId: string): Promise<void> {
   void stageId;
 }
 
+/** plan 命令的探索池特殊处理。返回 true 表示已处理（不再走普通 runStage）。 */
+async function handlePlanCommand(opts: StageCommandOptions): Promise<boolean> {
+  const projectRoot = resolveProjectRoot();
+
+  if (opts.multi) {
+    if (opts.export) {
+      log.error('plan --multi 不支持 --export（探索池需真实调用多个模型 CLI）');
+      process.exitCode = 1;
+      return true;
+    }
+    const { featureName, result } = await orchestratePlanMulti({
+      projectRoot,
+      feature: opts.feature,
+      models: opts.models,
+    });
+    if (result.status === 'failed') {
+      log.error(`所有模型出方案失败：${result.failed.map((f) => `${f.model}: ${f.error}`).join('; ')}`);
+      process.exitCode = 1;
+      return true;
+    }
+    const state = await readRunState(projectRoot, featureName);
+    if (state) printPlanMultiMenu(featureName, ensureExploreState(state), result);
+    return true;
+  }
+
+  // 非 --multi：awaiting_accept 防绕过（B2 规则2）
+  let featureName: string;
+  try {
+    featureName = await pickFeature(projectRoot, opts.feature);
+  } catch {
+    return false; // 选不出唯一 feature，交给 runStage 给出标准错误
+  }
+  const state = await readRunState(projectRoot, featureName);
+  if (state?.explore?.status === 'awaiting_accept') {
+    if (opts.force) {
+      abandonExploreToSingle(state.explore);
+      await writeRunState(projectRoot, featureName, state);
+      log.info('已放弃探索池，回到单方案 plan（explore 历史保留）');
+      return false; // 继续走普通 runStage 出单方案
+    }
+    log.error('探索池正在等待选择正式方案，不能直接跑单方案 plan');
+    log.hint('选定方案： vibeflow accept-plan <id>');
+    log.hint('放弃探索、回单方案： vibeflow plan --force');
+    process.exitCode = 1;
+    return true;
+  }
+  return false;
+}
+
 export function registerStageCommands(program: Command): void {
   for (const def of STAGE_COMMANDS) {
     const cmd = program
@@ -69,8 +126,17 @@ export function registerStageCommands(program: Command): void {
       cmd.option('-m, --message <text>', '附加给模型的提示信息');
     }
 
+    if (def.cli === 'plan') {
+      cmd.option('--multi', '多模型并行各出一套方案到 explore/（探索池）');
+      cmd.option('--models <ids>', '指定参与 --multi 的模型，逗号分隔（2-3 个），默认取 planner 的 default+fallback');
+    }
+
     cmd.action(async (opts: StageCommandOptions) => {
       try {
+        if (def.cli === 'plan') {
+          const handled = await handlePlanCommand(opts);
+          if (handled) return;
+        }
         await ensureRoleConfigured(def.stageId);
         const invokeMode: InvokeMode | undefined = opts.export ? 'export' : undefined;
         await runStage({

@@ -193,6 +193,15 @@ export function acceptArtifact(explore: ExploreState, artifactId: string): Explo
 }
 
 /**
+ * 放弃当前探索池、回到单方案路径（B2 出口）：清 accepted 指针、状态回 idle，
+ * 但保留 artifacts / failures / accept_history 历史（可追溯）。之后由 runStage 跑单方案 plan。
+ */
+export function abandonExploreToSingle(explore: ExploreState): void {
+  explore.status = 'idle';
+  explore.accepted = undefined;
+}
+
+/**
  * 探索专用的下游重置：当正式 plan 输入变化（plan --multi --force / 放弃探索回单方案 / accept 覆盖已有正式方案）时，
  * 把 plan 之后所有非 pending 阶段（completed / in_progress / blocked / failed / skipped）一律重置为 pending。
  *
