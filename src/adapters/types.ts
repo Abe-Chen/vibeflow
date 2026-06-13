@@ -44,6 +44,8 @@ export interface AgentRunRequest {
   writeAccess?: boolean;
   /** 透传额外环境变量（不会覆盖已有 env） */
   env?: Record<string, string>;
+  /** 关闭 spinner 等交互 UI；并发探索（plan --multi）时由 orchestrator 统一展示进度，避免多个 spinner 抢终端 */
+  quiet?: boolean;
 }
 
 export interface AgentRunResult {

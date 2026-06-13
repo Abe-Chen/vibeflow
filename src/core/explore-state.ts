@@ -65,25 +65,66 @@ export function exploreArtifactRelPath(kind: ExploreArtifactKind, seq: number, m
  * 登记一份成功产物：分配全局递增 seq、稳定 id 与文件路径，追加到 artifacts。
  * 只维护 explore 元数据，不负责写产物文件内容（由 runner 落盘）。
  */
-export function registerArtifact(
+export interface AllocatedArtifact {
+  seq: number;
+  id: string;
+  /** 相对 feature 目录的产物路径 */
+  file: string;
+}
+
+/** 预分配 artifact 的 seq / id / file（消耗 next_seq，但不加入 artifacts）。供 plan --multi 并发前统一分配，符合 §M3。 */
+export function allocateArtifact(
   explore: ExploreState,
-  params: { kind: ExploreArtifactKind; model: string; title?: string; inputs?: string[]; batchId?: string },
-): ExploreArtifact {
+  kind: ExploreArtifactKind,
+  model: string,
+): AllocatedArtifact {
   const seq = explore.next_seq;
   explore.next_seq += 1;
+  return {
+    seq,
+    id: `${KIND_PREFIX[kind]}_${seq3(seq)}`,
+    file: exploreArtifactRelPath(kind, seq, model),
+  };
+}
+
+/** 把一份已成功产出的 artifact 登记为 ready（用预分配的 id/file） */
+export function commitReadyArtifact(
+  explore: ExploreState,
+  params: { id: string; kind: ExploreArtifactKind; model: string; file: string; batchId?: string; title?: string; inputs?: string[] },
+): ExploreArtifact {
   const artifact: ExploreArtifact = {
-    id: `${KIND_PREFIX[params.kind]}_${seq3(seq)}`,
+    id: params.id,
     kind: params.kind,
     status: 'ready',
     batch_id: params.batchId,
     model: params.model,
-    file: exploreArtifactRelPath(params.kind, seq, params.model),
+    file: params.file,
     title: params.title,
     inputs: params.inputs,
     created_at: new Date().toISOString(),
   };
   explore.artifacts.push(artifact);
   return artifact;
+}
+
+/**
+ * 登记一份成功产物：分配 seq/id/file 并立即加入 artifacts。
+ * 单产物场景（consult / synthesize）用；并发的 plan --multi 用 allocateArtifact + commitReadyArtifact。
+ */
+export function registerArtifact(
+  explore: ExploreState,
+  params: { kind: ExploreArtifactKind; model: string; title?: string; inputs?: string[]; batchId?: string },
+): ExploreArtifact {
+  const alloc = allocateArtifact(explore, params.kind, params.model);
+  return commitReadyArtifact(explore, {
+    id: alloc.id,
+    kind: params.kind,
+    model: params.model,
+    file: alloc.file,
+    batchId: params.batchId,
+    title: params.title,
+    inputs: params.inputs,
+  });
 }
 
 /** 登记一次失败（不占 seq、不影响正式 plan 状态） */

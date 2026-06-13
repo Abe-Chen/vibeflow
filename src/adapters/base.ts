@@ -92,7 +92,7 @@ export abstract class SpawnAdapter implements ModelAdapter {
 
     // Spinner：进程跑期间显示已耗时
     // 非 TTY 环境（管道/CI）自动降级为静默——避免污染日志
-    const isTTY = Boolean(process.stdout.isTTY);
+    const isTTY = Boolean(process.stdout.isTTY) && !request.quiet;
     let spinner: Ora | null = null;
     let spinnerTimer: NodeJS.Timeout | null = null;
     if (isTTY) {
