@@ -28,7 +28,7 @@ import {
   QA_AGENT,
 } from '../../templates/agents.js';
 import { PROJECT_RULES, CODING_RULES, PRODUCT_RULES } from '../../templates/rules.js';
-import { CLAUDE_BRIDGE, AGENTS_BRIDGE } from '../../templates/bridges.js';
+import { CLAUDE_BRIDGE, AGENTS_BRIDGE, upsertBridgeBlock } from '../../templates/bridges.js';
 import { isGitRepo, isGitInstalled, initGitRepo, addCodexSkipGitCheck } from '../../utils/git.js';
 import { commandExists, PACKAGE_MANAGER_BIN } from '../../core/ready-check.js';
 
@@ -201,6 +201,7 @@ export async function runInit(opts: InitOptions = {}): Promise<void> {
     { name: 'AGENTS.md', content: AGENTS_BRIDGE },
   ];
   const bridgesCreated: string[] = [];
+  const bridgesMerged: string[] = [];
   const bridgesSkipped: string[] = [];
   for (const b of bridges) {
     const target = path.join(projectRoot, b.name);
@@ -209,7 +210,15 @@ export async function runInit(opts: InitOptions = {}): Promise<void> {
         await fs.writeFile(target, b.content, 'utf8');
         bridgesCreated.push(b.name);
       } else {
-        bridgesSkipped.push(b.name);
+        // 已存在用户自己的文件：只插入/更新带标记的 vibeflow 区块，不覆盖其它内容
+        const existing = await fs.readFile(target, 'utf8');
+        const { content, mode } = upsertBridgeBlock(existing);
+        if (mode === 'unchanged') {
+          bridgesSkipped.push(b.name);
+        } else {
+          await fs.writeFile(target, content, 'utf8');
+          bridgesMerged.push(b.name);
+        }
       }
     } else {
       await fs.writeFile(target, b.content, 'utf8');
@@ -221,8 +230,11 @@ export async function runInit(opts: InitOptions = {}): Promise<void> {
   if (bridgesCreated.length) {
     log.success(`已生成桥接文件: ${bridgesCreated.join(', ')}（让原生 CLI 也能发现 vibeflow 产物）`);
   }
+  if (bridgesMerged.length) {
+    log.success(`已把 vibeflow 区块合并进已有文件: ${bridgesMerged.join(', ')}（仅插入/更新带标记的区块，未动你的原有内容）`);
+  }
   if (bridgesSkipped.length) {
-    log.info(`已存在，未覆盖: ${bridgesSkipped.join(', ')}（如要覆盖请加 --force）`);
+    log.info(`vibeflow 区块已是最新: ${bridgesSkipped.join(', ')}`);
   }
 
   // 检测 git 仓库（Codex CLI 默认要求 git，且 vibeflow 后续阶段也受益于 git）
