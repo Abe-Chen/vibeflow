@@ -33,7 +33,7 @@ vibeflow profile sync-claude     # 让原生 Claude Code 也能读到（可撤�
 # 4. 进入你的目标项目
 cd ~/AndroidStudioProjects/<your-project>
 
-# 5. 初始化（同时生成 CLAUDE.md / AGENTS.md 桥接，让原生 CLI 也能用）
+# 5. 初始化（生成/合并 CLAUDE.md / AGENTS.md 桥接区块，让原生 CLI 也能用；已有文件只插入标记区块、不覆盖你的内容）
 vibeflow init
 
 # 6. 检查模型 CLI / 项目命令 / 工具链是否就绪
@@ -105,7 +105,7 @@ vibeflow/
 
 - ✅ **MVP v0.1 完整闭环**：19 个命令、10 个 prompt 模板、3 道门禁、4 种模型适配
 - ✅ **首次端到端实战验证**：FlipClockApp（Android Kotlin）跑通 9 阶段完整流程，跨模型评审 3 次抓到 Codex 自己没看到的真实 Bug。详见 [`docs/RETROSPECTIVE-flipclockapp.md`](docs/RETROSPECTIVE-flipclockapp.md)
-- ✅ **三层记忆 + 跨模型兼容**：全局 profile / 项目 rules / 任务产物；CLAUDE.md + AGENTS.md 桥接让原生 CLI 也能接续
+- ✅ **三层记忆 + 跨模型兼容**：全局 profile / 项目 rules / 任务产物；CLAUDE.md + AGENTS.md 桥接（标记块化，已有文件自动合并区块、不覆盖）让原生 CLI 也能接续
 - ✅ **AI 自动学习项目**：`vibeflow learn` 扫码生成 rules 草稿，支持老项目和新项目
 - ✅ **阶段间交互推进**：默认 [Y/n] 询问，`-y` 一键 chain，`--no-chain` 单步
 - ✅ **Spinner + 分级超时**：阶段命令调模型时显示已耗时/剩余超时；config.yaml 默认 `timeout_ms=900000`，并支持 `stage_timeouts` 给 develop/fix 等阶段单独配更长超时

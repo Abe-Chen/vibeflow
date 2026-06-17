@@ -83,6 +83,54 @@
 **真实模型端到端验证通过**：plan --multi(codex+claude) → 部分失败语义（1 成功即 awaiting_accept）→ 防绕过 → accept-plan → next 引导。
 **仍未做（设计 P2 预留）**：`plan --multi-extend` / `plan --add` / `plan-status` / 自动 Judge。
 
+## 📥 产物自动呈现 + 浏览态格式转换（需求池，2026-06-15 整理，未实现）
+
+> 来源：用户实际使用痛点——每次方案类阶段跑完，仍要手动去 `docs/ai-workflow/<feature>/` 找文件、再手动打开看；且管理用 markdown，但看长方案时源文件没渲染，读着累。
+> **本条目仅为需求记录，未进入实现。** 决策已和用户对齐（见下「关键决策」）。
+
+### 场景 → 需求 → 功能
+
+- **场景**：`plan` / `plan-review` / `finalize` / `deliver` 等方案类阶段成功后，用户想立刻读这一版方案；多模型并行（`plan --multi`）时还有多个候选文件，找+打开更麻烦。
+- **痛点两层**：①「找文件 + 打开」是重复手工动作；②markdown 源文件在编辑器里看，标题/表格/折叠/Mermaid 未渲染，长方案阅读体验差。
+- **需求**：阶段产物「自动呈现 + 以更易读的形态呈现」，但**管理仍以 markdown 为单一真相源不变**。
+
+### 拆成两个可独立交付的子需求（分期）
+
+**A — 产物自动呈现（先做，零外部依赖，价值立竿见影）**
+- 方案类阶段成功后，自动用系统默认程序打开对应产物（macOS `open`）。
+- 触发范围：**所有方案类阶段**（plan / plan-review / finalize / deliver）——已和用户确认（不含 develop/fix/code-review/test，避免打扰）。
+- 多产物处理：`plan --multi` / 探索池场景下打开什么待设计（候选全开 vs 汇总对比页），A 期可先只打开主产物，多产物对比留给 B。
+- 开关：建议 config.yaml 加 `auto_open`（默认开、可关、可覆盖阶段范围），非 TTY / CI 自动禁用。
+
+**B — 浏览态格式转换（A 的增强，分两步：先 HTML 后飞书）**
+- **B1 本地 HTML（先做）**：md → 带样式 HTML（标题锚点/目录/折叠/代码高亮/Mermaid），浏览器秒开、离线、零损耗、样式可控。打开的是渲染版而非源文件。A 期的「自动打开」在 B1 落地后改为打开 HTML。
+- **B2 飞书文档（后做，作为"要分享给团队时"的第二通道）**：md → 自动同步飞书文档，手机可看/可评论/可转发。
+  - **已知代价（需求阶段就记清）**：要联网 + 走飞书 API；md→飞书有格式损耗（代码块/嵌套表格/Mermaid 常丢）；是**单向快照**——飞书里改的不回流 md；有上传延迟。
+  - 因此 B2 不替代 B1，二者服务不同场景（B1=自己快速浏览，B2=对外分享/协作）。
+
+### 关键决策（已和用户对齐 2026-06-15）
+
+1. **最终浏览形态**：两个都要、分期——先本地 HTML 满足自己快速浏览，飞书作为对外分享第二通道后续加。
+2. **触发时机**：所有方案类阶段（plan / plan-review / finalize / deliver）自动打开；代码/测试类不自动弹。
+3. **需求池落地**：本 BACKLOG.md（贴近代码）。
+
+### 待设计/待确认（进入实现前再定）
+
+- 「自动用编辑器打开」与「转 HTML/飞书」本质冲突：目标若是 HTML 应用浏览器打开。最终形态决定打开方式——A 期先打开 md（编辑器），B1 落地后切到打开 HTML（浏览器）。
+- 多产物（`plan --multi` / 探索池）的呈现方式：候选并列对比页 or 逐个打开。
+- HTML 渲染选型：纯静态生成（markdown-it + 模板）vs 引轻量库；Mermaid 是否内联渲染。
+- 飞书通道复用已有飞书工具链（见记忆 `reference_lark_message_channel` / `feedback_lark_doc`），需先读 skill 文档、用 Lark-flavored Markdown。
+- 实施粒度：自动呈现逻辑应收敛在 stage-runner 成功分支的一个统一钩子，避免散落各阶段命令。
+
+## 桥接合并 + agent 配合增强（2026-06-17，已完成 commit d946282）
+
+> 来源：用户希望 Claude / Codex 与 vibeflow 更好配合。结论——**不做 Claude skill**（项目根 `CLAUDE.md` 本就被 Claude Code 自动读取、init 已生成桥接，再做 skill 是重复 + 破坏单一真相源），而是优化桥接本身让任何 agent 双受益。
+
+- **桥接标记块化**：`templates/bridges.ts` 的 CLAUDE.md/AGENTS.md 内容包进 `<!-- BEGIN/END vibeflow -->` 标记（与 profile sync-claude 同模式），新增 `upsertBridgeBlock()`。
+- **init 合并而非跳过**：`commands/init.ts` 对已存在的 CLAUDE.md/AGENTS.md 不再整体跳过，改为只插入/更新标记区块（幂等，再 init 不重复追加；`--force` 仍整体覆盖）。解决「已有自己 CLAUDE.md 的存量项目里 Claude 看不到 vibeflow」（典型：cat_monitor 的 CLAUDE.md 是项目自己的、只有 AGENTS.md 是桥接 → Codex 知道而 Claude 不知道）。
+- **桥接引导用双重克制措辞**：① vibeflow 可选、不是所有需求都走它，仅当有 in_progress/blocked 任务时才用 `next`/`status`；② `next` 仅顺流参考、用户指令优先（退回/改方案/重做用 `--force`，不让工具建议压过用户判断）。避免「以工具输出为准」这类强措辞让 agent 犯轴。
+- 已同步文档：README（init 注释 + 状态项）、本 BACKLOG。USAGE 暂未单列桥接小节（现有零散提及，按需再补）。
+
 ## V1 之后 / V2
 
 - `lock-plan` 严格化：hash + `.locked` 标记（当前是软门禁——只校验「非占位 + finalize 已 advance」）
