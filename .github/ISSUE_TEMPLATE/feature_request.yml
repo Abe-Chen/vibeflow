@@ -1,0 +1,30 @@
+name: 功能建议
+description: 从真实场景提出可验证的改进
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: scenario
+    attributes:
+      label: 使用场景
+      description: 你在什么项目、什么阶段遇到了什么问题？
+    validations:
+      required: true
+  - type: textarea
+    id: need
+    attributes:
+      label: 核心需求
+      description: 不先限定实现方式，说明你真正需要解决什么。
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议方案
+      description: 如有，请说明命令、状态或交互如何变化。
+  - type: textarea
+    id: impact
+    attributes:
+      label: 兼容性与风险
+      description: 是否影响现有 run.json、模板、权限或自动执行行为？

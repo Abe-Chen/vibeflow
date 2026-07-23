@@ -1,0 +1,62 @@
+name: Bug 报告
+description: 报告可复现的异常行为
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。请删除密钥、私有源码和完整敏感日志后再提交。
+  - type: input
+    id: version
+    attributes:
+      label: vibeflow 版本
+      placeholder: "例如 0.3.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: model
+    attributes:
+      label: 涉及的模型 CLI
+      multiple: true
+      options:
+        - Claude Code
+        - Codex CLI
+        - Gemini CLI
+        - Export 模式
+        - 与模型无关
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 请提供最小、可重复的命令和前置状态。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期行为
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: 环境
+      placeholder: |
+        OS:
+        Node.js:
+        claude/codex/gemini 版本:
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已删除密钥、Token、私人路径和不适合公开的源码/日志
+          required: true

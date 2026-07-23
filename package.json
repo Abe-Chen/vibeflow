@@ -1,18 +1,25 @@
 {
   "name": "vibeflow",
   "version": "0.3.0",
-  "description": "多模型 AI 研发工作流系统：把 Codex / Claude / Gemini 等多个 AI 编程工具组织成一个可控、可评审、可验收的研发团队",
+  "description": "让不同 AI 模型分别负责方案、开发和评审，避免同一个模型自写自审",
   "type": "module",
   "bin": {
     "vibeflow": "dist/cli/index.js"
   },
   "main": "dist/cli/index.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/cli/index.ts",
     "start": "node dist/cli/index.js",
-    "lint": "eslint src --ext .ts",
+    "lint": "eslint src",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "test:smoke": "npm run build && node --test test/cli-smoke.test.mjs",
     "typecheck": "tsc --noEmit",
+    "verify": "npm run typecheck && npm run lint && npm test",
+    "prepack": "npm run verify",
     "clean": "rm -rf dist"
   },
   "keywords": [
@@ -23,26 +30,43 @@
     "claude",
     "codex",
     "gemini",
-    "vibe-coding"
+    "vibe-coding",
+    "code-review",
+    "ai-agents"
   ],
-  "author": "chenzhiguo",
+  "author": "Abe-Chen",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abe-Chen/vibeflow.git"
+  },
+  "homepage": "https://github.com/Abe-Chen/vibeflow#readme",
+  "bugs": {
+    "url": "https://github.com/Abe-Chen/vibeflow/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "engines": {
     "node": ">=20.0.0"
   },
   "dependencies": {
-    "commander": "^12.1.0",
     "chalk": "^5.3.0",
-    "yaml": "^2.6.0",
+    "commander": "^12.1.0",
     "fs-extra": "^11.2.0",
     "ora": "^8.1.0",
-    "prompts": "^2.4.2"
+    "prompts": "^2.4.2",
+    "yaml": "^2.6.0"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
+    "@eslint/js": "^9.39.5",
     "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.10.0",
     "@types/prompts": "^2.4.9",
+    "eslint": "^9.39.5",
+    "tsx": "^4.19.0",
     "typescript": "^5.7.0",
-    "tsx": "^4.19.0"
+    "typescript-eslint": "^8.65.0"
   }
 }

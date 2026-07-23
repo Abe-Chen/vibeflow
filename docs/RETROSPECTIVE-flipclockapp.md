@@ -1,5 +1,7 @@
 # vibeflow v0.1 首次端到端实战复盘 — FlipClockApp
 
+> 历史实战快照：本文如实保留 v0.1 当时的问题与判断。文中多项“待解决/V2”能力后来已实现，当前状态请以 [CAPABILITIES.md](CAPABILITIES.md) 为准。
+
 | 项 | 内容 |
 |---|---|
 | 项目 | FlipClockApp（Android Kotlin + Jetpack Compose 翻页时钟应用） |

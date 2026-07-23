@@ -9,7 +9,6 @@ import { STAGE_OUTPUT_FILENAME, buildContext } from './context.js';
 import { ensureOutputWritten } from './output-artifact.js';
 import { buildAdapterMap } from '../adapters/registry.js';
 import { AgentRunResult, InvokeMode } from '../adapters/types.js';
-import { advanceCurrentStage } from './advance.js';
 import { isGitRepo } from '../utils/git.js';
 import prompts from 'prompts';
 import { execFile } from 'node:child_process';

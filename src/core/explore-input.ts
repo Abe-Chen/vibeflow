@@ -30,29 +30,29 @@ export interface ResolveInputCtx {
  */
 async function resolveOne(ref: string, ctx: ResolveInputCtx): Promise<ResolvedInput> {
   const artifact = findArtifact(ctx.explore, ref);
-  let absPath: string;
+  let candidatePath: string;
   let label: string;
 
   if (artifact) {
-    absPath = path.join(ctx.featureDir, artifact.file);
+    candidatePath = path.resolve(ctx.featureDir, artifact.file);
     label = `${artifact.id} (${artifact.kind}, ${artifact.model})`;
   } else {
-    const resolved = path.resolve(ctx.projectRoot, ref);
-    const realRoot = await fs.realpath(ctx.projectRoot).catch(() => ctx.projectRoot);
-    let realPath: string;
-    try {
-      realPath = await fs.realpath(resolved);
-    } catch {
-      throw new Error(`输入不存在（既不是探索产物 id，也不是可读文件）: ${ref}`);
-    }
-    if (realPath !== realRoot && !realPath.startsWith(realRoot + path.sep)) {
-      throw new Error(`拒绝读取项目根目录之外的文件: ${ref}`);
-    }
-    if (isSensitiveOrBinaryFile(path.basename(realPath))) {
-      throw new Error(`拒绝读取敏感/二进制文件: ${ref}`);
-    }
-    absPath = realPath;
-    label = path.relative(ctx.projectRoot, realPath);
+    candidatePath = path.resolve(ctx.projectRoot, ref);
+    label = path.relative(ctx.projectRoot, candidatePath);
+  }
+
+  const realRoot = await fs.realpath(ctx.projectRoot).catch(() => path.resolve(ctx.projectRoot));
+  let absPath: string;
+  try {
+    absPath = await fs.realpath(candidatePath);
+  } catch {
+    throw new Error(`输入不存在（既不是探索产物 id，也不是可读文件）: ${ref}`);
+  }
+  if (absPath !== realRoot && !absPath.startsWith(realRoot + path.sep)) {
+    throw new Error(`拒绝读取项目根目录之外的文件: ${ref}`);
+  }
+  if (isSensitiveOrBinaryFile(path.basename(absPath))) {
+    throw new Error(`拒绝读取敏感/二进制文件: ${ref}`);
   }
 
   const stat = await fs.stat(absPath).catch(() => null);

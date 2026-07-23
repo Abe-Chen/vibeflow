@@ -39,7 +39,7 @@ interface StageCommandDef {
 
 const STAGE_COMMANDS: StageCommandDef[] = [
   { cli: 'plan',         stageId: 'plan',         description: '由 Planner 生成方案 v1，写入 01_plan_v1.md' },
-  { cli: 'plan-review',  stageId: 'plan_review',  description: '由 Plan Reviewer 评审方案，写入 02_plan_review.md（要求与 Planner 不同模型）' },
+  { cli: 'plan-review',  stageId: 'plan_review',  description: '由 Plan Reviewer 评审方案，写入 02_plan_review.md（默认与 Planner 不同模型）' },
   { cli: 'finalize',     stageId: 'finalize',     description: '吸收评审意见，输出最终方案 03_final_plan.md（human_gate）' },
   { cli: 'develop',      stageId: 'develop',      description: '按 final_plan 开发，输出 05_implementation_report.md（要求 final_plan 已锁定）', requireLockedPlan: true },
   { cli: 'code-review',  stageId: 'code_review',  description: '由 Code Reviewer 评审代码，写入 06_code_review.md（要求与 Developer 不同模型）', requireDifferentFromDeveloper: true },

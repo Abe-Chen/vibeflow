@@ -16,7 +16,7 @@ export function buildBridgeBlock(): string {
     '',
     '## vibeflow 工作流（本区块由 vibeflow 维护，请勿手改）',
     '',
-    '> 本项目用 [vibeflow](https://github.com/) 编排多模型 AI 研发流程。',
+    '> 本项目用 [vibeflow](https://github.com/Abe-Chen/vibeflow) 编排多模型 AI 研发流程。',
     '> 即使没有人通过 `vibeflow` CLI 调用你，下面的产物也是有效的项目上下文。',
     '',
     '### 与 vibeflow 的配合（仅当有进行中任务时）',

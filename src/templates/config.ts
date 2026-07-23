@@ -1,5 +1,5 @@
 export const DEFAULT_CONFIG_YAML = `# vibeflow 项目配置
-# 文档: https://github.com/your-org/vibeflow
+# 文档: https://github.com/Abe-Chen/vibeflow
 
 version: 1
 

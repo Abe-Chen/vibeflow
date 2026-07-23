@@ -1,5 +1,7 @@
 # 多模型 AI 研发工作流系统 - 技术方案
 
+> 历史设计快照：本文保留早期架构与演进推导，部分路线图状态已被后续 v0.3.0 实现超越。当前行为以 [CAPABILITIES.md](CAPABILITIES.md)、[USAGE.md](USAGE.md) 和代码为准。
+
 | 文档属性 | 内容 |
 |---|---|
 | 文档类型 | 技术方案 / Technical Design |

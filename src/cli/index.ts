@@ -22,7 +22,7 @@ const program = new Command();
 
 program
   .name('vibeflow')
-  .description('多模型 AI 研发工作流系统：把多个 AI 编程工具组织成一个可控的研发团队')
+  .description('让不同 AI 模型分别负责方案、开发和评审，避免同一个模型自写自审')
   .version('0.3.0', '-v, --version', '查看版本号')
   .helpOption('-h, --help', '查看帮助');
 
